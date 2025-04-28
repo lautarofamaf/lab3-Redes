@@ -32,6 +32,7 @@ module NodeTx
     parameters:
         @display("i=block/routing");
         volatile double packetByteSize;
+        volatile double bufferSize;
 
     gates:
         output out;
@@ -45,7 +46,8 @@ module NodeTx
             parameters:
 
                 @display("p=75,190");
-                volatile double bufferSize;
+
+
         }
     connections:
         gen.out --> queue.in;
@@ -56,6 +58,7 @@ module NodeRx
 {
     parameters:
         @display("i=block/routing");
+        volatile double bufferSize;
 
     gates:
         input in;
@@ -67,7 +70,7 @@ module NodeRx
         queue: Queue {
             parameters:
                 @display("p=75,190");
-                volatile double bufferSize;
+
         }
     connections:
         in --> queue.in;
