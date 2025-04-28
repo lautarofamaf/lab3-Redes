@@ -2,6 +2,7 @@ simple Generator
 {
     parameters:
         volatile double generationInterval; // sec
+        volatile double packetByteSize;
         @display("i=block/source");
     gates:
         output out;
@@ -11,6 +12,7 @@ simple Queue
 {
     parameters:
         volatile double serviceTime; // sec
+        volatile double bufferSize;
         @display("i=block/queue;q=buffer");
     gates:
         input in;
@@ -25,20 +27,25 @@ simple Sink
         input in;
 }
 
-module NodeTx 
+module NodeTx
 {
     parameters:
         @display("i=block/routing");
+        volatile double packetByteSize;
+
     gates:
         output out;
     submodules:
         gen: Generator {
             parameters:
+
                 @display("p=75,50");
         }
         queue: Queue {
             parameters:
+
                 @display("p=75,190");
+                volatile double bufferSize;
         }
     connections:
         gen.out --> queue.in;
@@ -49,6 +56,7 @@ module NodeRx
 {
     parameters:
         @display("i=block/routing");
+
     gates:
         input in;
     submodules:
@@ -59,6 +67,7 @@ module NodeRx
         queue: Queue {
             parameters:
                 @display("p=75,190");
+                volatile double bufferSize;
         }
     connections:
         in --> queue.in;
