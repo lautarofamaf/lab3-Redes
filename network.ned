@@ -12,7 +12,7 @@ simple Queue
 {
     parameters:
         volatile double serviceTime; // sec
-        volatile double bufferSize;
+        volatile int bufferSize;
         @display("i=block/queue;q=buffer");
     gates:
         input in;
@@ -32,7 +32,7 @@ module NodeTx
     parameters:
         @display("i=block/routing");
         volatile double packetByteSize;
-        volatile double bufferSize;
+        volatile int bufferSize;
 
     gates:
         output out;

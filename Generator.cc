@@ -10,6 +10,7 @@ class Generator : public cSimpleModule {
 private:
     cMessage *sendMsgEvent;
     cStdDev transmissionStats;
+
 public:
     Generator();
     virtual ~Generator();
@@ -43,7 +44,9 @@ void Generator::finish() {
 void Generator::handleMessage(cMessage *msg) {
 
     // create new packet
-    cMessage *pkt = new cMessage("packet");
+    cPacket *pkt = new cPacket("packet");
+
+    pkt->setByteLength(par("packetByteSize"));
     // send to the output
     send(pkt, "out");
 
