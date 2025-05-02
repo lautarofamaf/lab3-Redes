@@ -1,3 +1,4 @@
+// Generator ->
 simple Generator
 {
     parameters:
@@ -7,18 +8,18 @@ simple Generator
     gates:
         output out;
 }
-
+// (-> Queue ->)
 simple Queue
 {
     parameters:
-       // volatile double serviceTime; // sec
+         volatile double serviceTime; // sec
          volatile int bufferSize;
         @display("i=block/queue;q=buffer");
     gates:
         input in;
         output out;
 }
-
+// (-> Sink )
 simple Sink
 {
     parameters:
@@ -26,13 +27,11 @@ simple Sink
     gates:
         input in;
 }
-
+// (Generattor -> Queue) ->
 module NodeTx
 {
     parameters:
         @display("i=block/routing");
-        volatile int packetByteSize;
-        volatile int bufferSize;
 
     gates:
         output out;
@@ -53,12 +52,11 @@ module NodeTx
         gen.out --> queue.in;
         queue.out --> out;
 }
-
+// -> (Queue -> Sink) ->
 module NodeRx
 {
     parameters:
         @display("i=block/routing");
-         volatile double bufferSize;
 
     gates:
         input in;
@@ -74,9 +72,12 @@ module NodeRx
         }
     connections:
         in --> queue.in;
+        //Case Study 1:
+        //queue.out --> {  datarate = 0.5Mbps;  } --> sink.in;
+        //Case Study 2:
         queue.out --> {  datarate = 1Mbps;  } --> sink.in;
 }
-
+// (Generattor -> Queue) -> Queue -> (Queue -> Sink)
 network Network
 {
     @display("bgl=2");
@@ -92,5 +93,8 @@ network Network
         }
     connections:
         nodeTx.out --> {  datarate = 1Mbps; delay = 100us;  } --> queue.in;
-        queue.out --> {  datarate = 1Mbps; delay = 100us;  } --> nodeRx.in;
+        //Case Study 1:
+        //queue.out --> {  datarate = 1Mbps; delay = 100us;  } --> nodeRx.in;
+        //Case Study 2:
+        queue.out --> {  datarate = 0.5Mbps; delay = 100us;  } --> nodeRx.in;
 }
