@@ -48,25 +48,16 @@ void Queue::finish() {
 }
 
 void Queue::handleMessage(cMessage *msg) {
-
-
-
-
     // if msg is signaling an endServiceEvent
     if (msg == endServiceEvent) {
-
-
-
         // if packet in buffer, send next one
         if (!buffer.isEmpty()) {
             // dequeue packet
-            cMessage *pkt = (cMessage*) buffer.pop();
-            // send packet
-
+            cPacket *pkt = (cPacket*) buffer.pop();
+            // send packets
             send(pkt, "out");
-
             // start new service
-            serviceTime = par("serviceTime");
+            serviceTime = pkt->getDuration();
             scheduleAt(simTime() + serviceTime, endServiceEvent);
         }
     } else { // if msg is a data packet

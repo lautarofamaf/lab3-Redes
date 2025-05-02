@@ -1,8 +1,8 @@
 simple Generator
 {
     parameters:
-        volatile double generationInterval; // sec
-        volatile double packetByteSize;
+         volatile double generationInterval; // sec
+         volatile int packetByteSize;
         @display("i=block/source");
     gates:
         output out;
@@ -11,8 +11,8 @@ simple Generator
 simple Queue
 {
     parameters:
-        volatile double serviceTime; // sec
-        volatile int bufferSize;
+       // volatile double serviceTime; // sec
+         volatile int bufferSize;
         @display("i=block/queue;q=buffer");
     gates:
         input in;
@@ -31,7 +31,7 @@ module NodeTx
 {
     parameters:
         @display("i=block/routing");
-        volatile double packetByteSize;
+        volatile int packetByteSize;
         volatile int bufferSize;
 
     gates:
@@ -58,7 +58,7 @@ module NodeRx
 {
     parameters:
         @display("i=block/routing");
-        volatile double bufferSize;
+         volatile double bufferSize;
 
     gates:
         input in;
