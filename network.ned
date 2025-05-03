@@ -2,8 +2,8 @@
 simple Generator
 {
     parameters:
-         volatile double generationInterval; // sec
-         volatile int packetByteSize;
+        volatile double generationInterval; // sec
+        volatile int packetByteSize;
         @display("i=block/source");
     gates:
         output out;
@@ -12,8 +12,8 @@ simple Generator
 simple Queue
 {
     parameters:
-         volatile double serviceTime; // sec
-         volatile int bufferSize;
+        volatile double serviceTime; // sec
+        volatile int bufferSize;
         @display("i=block/queue;q=buffer");
     gates:
         input in;
@@ -27,6 +27,30 @@ simple Sink
     gates:
         input in;
 }
+
+// NODOS MODIFICADOS ABAJO
+//Tarea Diseno
+
+simple TransportTx
+{
+    parameters:
+        int bufferSize;
+        @display("i=block/queue;q=buffer");
+    gates:
+        input toApp;
+        inout toOut;
+}
+simple TransportRx
+{
+    parameters:
+        int bufferSize;
+        @display("i=block/subqueue,,0;q=buffer");
+    gates:
+        output toApp;
+        inout toOut;
+}
+
+
 // (Generattor -> Queue) ->
 module NodeTx
 {
@@ -34,23 +58,24 @@ module NodeTx
         @display("i=block/routing");
 
     gates:
-        output out;
+        output out; //to packet queue
+        input in; // from feedback queue
     submodules:
         gen: Generator {
             parameters:
-
                 @display("p=75,50");
         }
-        queue: Queue {
+        traTx: TransportTx {
             parameters:
-
-                @display("p=75,190");
-
-
+                @display("p=75,190;i=block/subqueue");
         }
+
     connections:
-        gen.out --> queue.in;
-        queue.out --> out;
+
+        gen.out --> traTx.toApp;   // gen alimenta a traTx
+        in --> traTx.toOut$i;     // El feedback que ENTRA a NodeTx (por gate 'in') va a traTx
+        traTx.toOut$o --> out;   // Los datos que SALEN de traTx van a la salida de NodeTx (gate 'out')
+
 }
 // -> (Queue -> Sink) ->
 module NodeRx
@@ -60,22 +85,25 @@ module NodeRx
 
     gates:
         input in;
+        output out;
     submodules:
         sink: Sink {
             parameters:
                 @display("p=75,50");
         }
-        queue: Queue {
+        traRx: TransportRx {
             parameters:
                 @display("p=75,190");
-
         }
     connections:
-        in --> queue.in;
+
+        in --> traRx.toOut$i;     // Los datos que ENTRAN a NodeRx (por gate 'in') van a traRx
+        traRx.toOut$o --> out;   // El feedback que SALE de traRx va a la salida de NodeRx (gate 'out')
+
         //Case Study 1:
-        //queue.out --> {  datarate = 0.5Mbps;  } --> sink.in;
+        //traRx.toApp --> {  datarate = 0.5Mbps;  } --> sink.in;
         //Case Study 2:
-        queue.out --> {  datarate = 1Mbps;  } --> sink.in;
+        traRx.toApp --> {  datarate = 1Mbps; } --> sink.in;
 }
 // (Generattor -> Queue) -> Queue -> (Queue -> Sink)
 network Network
@@ -85,16 +113,26 @@ network Network
         nodeTx: NodeTx {
             @display("p=30,30");
         }
-        queue: Queue {
+        queueData: Queue {
             @display("p=130,30");
+        }
+        queueFeedback: Queue {
+            @display("p=130,60");
         }
         nodeRx: NodeRx {
             @display("p=230,30");
         }
     connections:
-        nodeTx.out --> {  datarate = 1Mbps; delay = 100us;  } --> queue.in;
+        nodeTx.out --> {  datarate = 1Mbps; delay = 100us; } --> queueData.in;
+
+        queueFeedback.out --> {  datarate = 1Mbps; delay = 100us; } --> nodeTx.in;
+
+        nodeRx.out --> {  datarate = 1Mbps; delay = 100us; } --> queueFeedback.in;
         //Case Study 1:
-        //queue.out --> {  datarate = 1Mbps; delay = 100us;  } --> nodeRx.in;
+        //queueData.out --> {  datarate = 1Mbps; delay = 100us;  } --> nodeRx.in;
+
         //Case Study 2:
-        queue.out --> {  datarate = 0.5Mbps; delay = 100us;  } --> nodeRx.in;
+        queueData.out --> {  datarate = 0.5Mbps; delay = 100us; } --> nodeRx.in;
+
 }
+
