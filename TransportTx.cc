@@ -45,7 +45,7 @@ void TransportTx::finish() {
 
 void TransportTx::handleMessage(cMessage *msg) {
 
-    if(msg->getKind()!=Undefined){
+    if(msg->getKind()==Undefined){
         msg->setKind(Data);
     }
     if(msg->getKind()==Feedback){
@@ -55,7 +55,7 @@ void TransportTx::handleMessage(cMessage *msg) {
         // hacer algo con la info de feedback pkt
         int remainingBuffer = feedbackPkt->getRemainingBuffer();
         // code
-        delete(msg);
+        //delete(msg);
     }
     else if(msg->getKind()==Data){
         //
