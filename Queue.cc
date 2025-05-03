@@ -38,6 +38,8 @@ Queue::~Queue() {
 void Queue::initialize() {
     buffer.setName("buffer");
     endServiceEvent = new cMessage("endService");
+    bufferSizeVector.setName("bufferUsage");
+    packetDropVector.setName("packetDrops");
     packetDrop = 0;
     packetEnqueued = 0;
 }
