@@ -33,7 +33,13 @@ PROJECTRELATIVE_PATH =
 O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 
 # Object files for local .cc, .msg and .sm files
-OBJS = $O/Generator.o $O/Queue.o $O/Sink.o $O/TransportRx.o $O/TransportTx.o
+OBJS = \
+    $O/Generator.o \
+    $O/Packet.o \
+    $O/Queue.o \
+    $O/Sink.o \
+    $O/TransportRx.o \
+    $O/TransportTx.o
 
 # Message files
 MSGFILES =
