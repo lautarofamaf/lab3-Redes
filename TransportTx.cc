@@ -55,7 +55,8 @@ void TransportTx::handleMessage(cMessage *msg) {
         // hacer algo con la info de feedback pkt
         int remainingBuffer = feedbackPkt->getRemainingBuffer();
         // code
-        //delete(msg);
+        delete msg;
+        return; // un poco polemico pero funciona
     }
     else if(msg->getKind()==Data){
         //
