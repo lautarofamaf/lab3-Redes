@@ -13,6 +13,7 @@ private:
     simtime_t serviceTime;
     cOutVector bufferSizeVector;
     cOutVector packetDropVector;
+    cOutVector packetEnqueuedVector;
     int packetDrop;
     int packetEnqueued;
 
@@ -40,11 +41,16 @@ void Queue::initialize() {
     endServiceEvent = new cMessage("endService");
     packetDrop = 0;
     packetEnqueued = 0;
+
+    bufferSizeVector.setName("BufferSize");
+    packetDropVector.setName("PacketDropCount");
+    packetEnqueuedVector.setName("PacketEnqueuedCount");
+
 }
 
 void Queue::finish() {
-    recordScalar("TotalPacketsDropped", packetDrop);
-    recordScalar("TotalPacketsEnqueued",  packetEnqueued );
+  //  recordScalar("TotalPacketsDropped", packetDrop);
+    //recordScalar("TotalPacketsEnqueued",  packetEnqueued );
 }
 
 void Queue::handleMessage(cMessage *msg) {
@@ -93,13 +99,15 @@ void Queue::handleMessage(cMessage *msg) {
             //drop the packet
             delete msg;
             this->bubble("packet dropped");
-            packetDropVector.record(1);
+
             packetDrop++;
+            packetDropVector.record(packetDrop);  // Acumulativo
         }else{
             // enqueue the packet
             buffer.insert(msg);
             bufferSizeVector.record(buffer.getLength());
             packetEnqueued++;
+            packetEnqueuedVector.record(packetEnqueued); // Acumulativo
             // if the server is idle
             if (!endServiceEvent->isScheduled()) {
                 // start the service
