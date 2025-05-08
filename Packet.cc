@@ -9,33 +9,72 @@
 typedef long long ll;
 
 // Constructor
-FeedbackPkt::FeedbackPkt() {
-}
+FeedbackPkt::FeedbackPkt() {}
+
 
 // Destructor
 FeedbackPkt::~FeedbackPkt() {
 }
-
 void FeedbackPkt::initialize(){
     this -> setKind(Undefined);
     this -> remainingBuffer = -1;
     this -> ack             =  false;
     this -> byteLength      =  0;
+    this -> setName("FeedbackPkt");
+    this -> Lose_Packet     =  -1;
+    this-> delay          =  0;
 }
 
-void FeedbackPkt::finish(){
+// void FeedbackPkt::finish(){
+// }
+
+// void FeedbackPkt::setRemainingBuffer(int n){
+//     this -> remainingBuffer = n;
+// }
+
+// int FeedbackPkt::getRemainingBuffer(){
+//    return this -> remainingBuffer;
+// }
+
+// void FeedbackPkt::setByteLength(ll s){
+//     this -> byteLength = s;
+// }
+
+DataPkt::DataPkt() {}
+
+
+// Destructor
+DataPkt::~DataPkt() {
 }
 
-void FeedbackPkt::setRemainingBuffer(int n){
-    this -> remainingBuffer = n;
+void DataPkt::initialize(){
+    this -> setKind(Undefined);
+    this -> remainingBuffer = -1;
+    this -> ack             =  false;
+    this -> byteLength      =  0;
+    this -> setName("FeedbackPkt");
 }
 
-int FeedbackPkt::getRemainingBuffer(){
-   return this -> remainingBuffer;
-}
+// void DataPkt::finish(){
+// }
 
-void FeedbackPkt::setByteLength(ll s){
-    this -> byteLength = s;
-}
+// void DataPkt::setRemainingBuffer(int n){
+//     this -> remainingBuffer = n;
+// }
+
+// int DataPkt::getRemainingBuffer(){
+//    return this -> remainingBuffer;
+// }
+
+// void DataPkt::setByteLength(ll s){
+//     this -> byteLength = s;
+// }
+
+
+
+
+
+
+
 
 #endif /* PACKET */

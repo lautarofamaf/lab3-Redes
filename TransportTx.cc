@@ -15,7 +15,12 @@ class TransportTx: public cSimpleModule {
         cOutVector bufferSizeVector;
         cOutVector packetDropVector;
 
+
     public:
+        float last_delay = 50;
+        bool is_bussy = false;
+        flaot delay = 0;
+        int count=0;
         TransportTx();
         virtual ~TransportTx();
     protected:
@@ -43,20 +48,53 @@ void TransportTx::initialize() {
 void TransportTx::finish() {
 }
 
-void TransportTx::handleMessage(cMessage *msg) {
+void TransportTx::handleMessage(cMesgetKindsage *msg) {
 
     if(msg->getKind()==Undefined){
-        msg->setKind(Data);
+         //     msg->setKind(Data);
+        DataPkt *dataPkt = (DataPkt*) msg;
+        msg->id = TransportTx->count;
+        TransportTx->count++;
     }
-    if(msg->getKind()==Feedback){
-        // si me dicen que el buffer ta lleno, me rescato
-        // si no, mantengo velocidad
-        FeedbackPkt *feedbackPkt = (FeedbackPkt*) msg;
-        // hacer algo con la info de feedback pkt
-        int remainingBuffer = feedbackPkt->getRemainingBuffer();
-        // code
+    else if(msg->getKind()==Feedback){
+       if(FeedbackPkt->Lose_Packet==-1){
+        if(FeedbackPkt->delay>TransportTx->last_delay+50){
+            TransportTx->last_delay=FeedbackPkt->delay;
+            TransportTx->is_bussy=true;
+            delete msg;
+            return;
+        }
+        else {
+            TransportTx->last_delay=FeedbackPkt->delay;
+            TransportTx->is_bussy=false;
+            delete msg;
+            return;
+        }
+
+        else{
+            TransportTx->is_bussy=true;
+            delete msg;
+            return;
+
+        }
         delete msg;
-        return; // un poco polemico pero funciona
+        return;
+
+       }
+       else{
+        TransportTx->count=FeedbackPkt->Lose_Packet;
+        TransportTx->is_bussy=true;
+        delete msg;
+        return;
+
+       }
+        // // si me dicen que el buffer ta lleno, me rescato
+        // // si no, mantengo velocidad
+        // FeedbackPkt *feedbackPkt = (FeedbackPkt*) msg;
+        // // hacer algo con la info de feedback pkt
+        // int remainingBuffer = feedbackPkt->getRemainingBuffer();
+        // // code
+ // un poco polemico pero funciona
     }
     else if(msg->getKind()==Data){
         //
@@ -97,7 +135,18 @@ void TransportTx::handleMessage(cMessage *msg) {
             // if the server is idle
             if (!endServiceEvent->isScheduled()) {
                 // start the service
-                scheduleAt(simTime() + 0, endServiceEvent);
+                if(is_bussy){
+                    TransportTx->delay += 10;
+                }
+                else{
+                    if(transportTx->delay>10){
+                        TransportTx->delay -=10 ;
+                    }
+                    else{
+                        TransportTx->delay = 0;
+                    }
+                    }
+                scheduleAt(simTime() + TransportTx->delay, endServiceEvent);
             }
         }
     }

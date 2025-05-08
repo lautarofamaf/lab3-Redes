@@ -21,14 +21,16 @@ class FeedbackPkt: public cMessage {
       bool ack;
 
     public:
+              int Lose_Packet;
+              float delay;
                      FeedbackPkt(); // Constructor
              virtual ~FeedbackPkt(); // Destructor
-             // Actualizar tamano del buffer
-             virtual void setRemainingBuffer(int n);
-             // Consultar tamano del buffer
-             virtual int getRemainingBuffer();
-             // Setear tamano del paquete
-             virtual void setByteLength(ll s);
+            //  // Actualizar tamano del buffer
+            //  virtual void setRemainingBuffer(int n);
+            //  // Consultar tamano del buffer
+            //  virtual int getRemainingBuffer();
+            //  // Setear tamano del paquete
+            //  virtual void setByteLength(ll s);
 
 
     protected:
@@ -37,5 +39,30 @@ class FeedbackPkt: public cMessage {
 
 };
 
+
+class DataPkt: public cMessage {
+  // Privado  --> Acceso desde la misma clase
+  private:
+    int  remainingBuffer;
+    ll   byteLength;
+    bool ack;
+
+  public:
+           int id;
+                   DataPkt(); // Constructor
+           virtual ~DataPkt(); // Destructor
+          //  // Actualizar tamano del buffer
+          //  virtual void setRemainingBuffer(int n);
+          //  // Consultar tamano del buffer
+          //  virtual int getRemainingBuffer();
+          //  // Setear tamano del paquete
+          //  virtual void setByteLength(ll s);
+
+
+  protected:
+      virtual void initialize();
+      virtual void finish();
+
+};
 
 #endif /* PACKET_H */

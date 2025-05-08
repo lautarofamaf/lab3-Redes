@@ -18,12 +18,14 @@ class TransportRx: public cSimpleModule {
         cOutVector packetDropVector;
 
     public:
+        bool Send_Message_Loose;
+        int count;
         TransportRx();
         virtual ~TransportRx();
     protected:
         virtual void initialize();
         virtual void finish();
-        virtual void handleMessage(cMessage *msg);
+        virtual void handleMessage(DataPkt *msg);
 };
 
 Define_Module(TransportRx);
@@ -37,6 +39,8 @@ TransportRx::~TransportRx() {
 }
 
 void TransportRx::initialize() {
+    Send_Message_Loose = false;
+    count = 0;
     buffer.setName("buffer");
     endServiceEvent = new cMessage("endService");
 }
@@ -44,18 +48,34 @@ void TransportRx::initialize() {
 void TransportRx::finish() {
 }
 
-void TransportRx::handleMessage(cMessage *msg) {
+void TransportRx::handleMessage(DataPkt *msg) {
 //send feedback
-   FeedbackPkt *feedbackPkt = new FeedbackPkt();
-   feedbackPkt->setByteLength(20);
-   feedbackPkt->setKind(2);
-   feedbackPkt->setRemainingBuffer(par("bufferSize").intValue() - buffer.getLength());
-   send(feedbackPkt, "toOut$o");
 
-   if(msg->getKind()==Data){
-       send(msg,"toApp");
+
+    FeedbackPkt *feedbackPkt = new FeedbackPkt();
+   if(msg->id==TransportRx.count){
+       TransportRx->count++;
+        send(msg,"toApp");
+        TransportRx->Send_Message_Loose=false;TransportRx->Send_Message_Loose=true;
+        feedbackPkt->delay = simTime()- msg->getCreationTime();
+        send(feedbackPkt, "toOut$o");
+    }
+   else{
+    if(TransportRx->Send_Message_Loose==false){
+        TransportRx->Send_Message_Loose=true;
+        // FeedbackPkt *feedbackPkt = new Feed                   FeedbackPkt(); // Constructor
+           virtual ~FeedbackPkt(); // DestructorbackPkt();
+        // feedbackPkt->setByteLength(20);
+        // feedbackPkt->setKind(Feedback);
+        // feedbackPkt->setRemainingBuffer(par("bufferSize").intValue() - buffer.getLength());
+        feedBackPkt->Lose_Packet = TransportRx->count;
+
+        send(feedbackPkt, "errorMessage");
+
+    }
+    }
    }
 
-}
+
 
 #endif
