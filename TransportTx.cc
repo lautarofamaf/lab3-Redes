@@ -89,9 +89,9 @@ void TransportTx::handleMessage(DataPkt *msg) {
         // // hacer algo con la info de feedback pkt
         // int remainingBuffer = feedbackPkt->getRemainingBuffer();
         // // code
- // un poco polemico pero funciona
+
     }   else if(msg->getKind()==Data){
-        //
+
     }// if msg is signaling an endServiceEvent
     if (msg == endServiceEvent) {
         // if packet in buffer, send next one
@@ -102,13 +102,9 @@ void TransportTx::handleMessage(DataPkt *msg) {
             send(pkt, "toOut");
 
             serviceTime = pkt->getDuration();
-            serviceTimeVector.record(serviceTime)   ;                // <- serviceTime: En cuanto tiempo se mandara
-                                                                  //                 el paquete por el medio
-                                                                  // Omnet ya sabe que el paquete tardara
-                                                                  // getDuration() = Tamano / Datarate_canal
-                                                                  // en viajar por el medio
-            scheduleAt(simTime() + serviceTime, endServiceEvent); // <- scheduleAt(<pkt_llegada_momento>, endServiceEvent):
+            serviceTimeVector.record(serviceTime)   ;
 
+            scheduleAt(simTime() + serviceTime, endServiceEvent);
         }
 
     } else { // if msg is a data packet

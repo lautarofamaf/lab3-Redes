@@ -26,8 +26,8 @@ void FeedbackPkt::initialize(){
 }
 
 
-// void FeedbackPkt::finish(){
-// }
+ void FeedbackPkt::finish(){
+ }
 
 // void FeedbackPkt::setRemainingBuffer(int n){
 //     this -> remainingBuffer = n;
@@ -56,8 +56,8 @@ void DataPkt::initialize(){
     this -> setName("FeedbackPkt");
 }
 
-// void DataPkt::finish(){
-// }
+ void DataPkt::finish(){
+ }
 
 // void DataPkt::setRemainingBuffer(int n){
 //     this -> remainingBuffer = n;
