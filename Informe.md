@@ -27,7 +27,8 @@ Para cada uno de los casos corrimos simulaciones paramétricas con:
 - *generationInterval* = 0.1
 
 
-Caso 1
+## Caso 1
+
 Experiment	Measurement	Replication	Module	Name	Count	Mean	StdDev	Variance	
 General		#0	Network.nodeTx.gen	packetGen	1979	1	0	0	
 General		#0	Network.nodeTx.queue	BufferSize	1979	13.072764	8.249200	68.049303	
@@ -40,7 +41,8 @@ General		#0	Network.nodeRx.sink	PacketUsed	998	1	0	0
 General		#0	Network.nodeRx.sink	Delay	998	32.879469	12.874907	165.763227	
 General		#0	Network.nodeRx.queue	PacketDropCount	770	385.500000	222.424144	49,472.500000
 
-Caso 2
+## Caso 2
+
 Experiment	Measurement	Replication	Module	Name	Count	Mean	StdDev	Variance	
 General		#0	Network.nodeTx.gen	packetGen	1979	1	0	0	
 General		#0	Network.nodeTx.queue	BufferSize	1979	13.072764	8.249200	68.049303	
@@ -55,31 +57,27 @@ General		#0	Network.queue	PacketDropCount	771	386	222.712820	49,601
 
 Estos son resultados que nos dio la ejecucion en omnet. Asi tal cual como esta es dificil entender y mas aun sacar una conclusion, por lo que haremos algunas operaciones con los datos para poder observar mas de cerca que esta sucediendo. 
 
-1. % Paquetes Perdidos:
+1. **% Paquetes Perdidos:**
     PacketDropCount (paquetes descartados) vs PacketEnqueuedCount (paquetes encolados).
 
     Fórmula:
         %Perdidas=(PacketDropCount/PacketEnqueuedCount en nodeTx) x 100.
 
-    Ejemplo Caso 1:
-        (385.5/990)×100 ≈ 50.1%.
+    Caso 1: (385.5/990)×100 ≈ 50.1%.
 
-    Ejemplo Caso 2:
-        (386/990)×100 ≈ 50.45%.
+    Caso 2: (386/990)×100 ≈ 50.45%.
 
-2. Throughput Útil (pkt/s):
+2. **Throughput Útil (pkt/s):**
     PacketUsed en el sink (paquetes recibidos) y tiempo de simulación (200s).
 
     Fórmula:
         Throughput=Total paquetes recibidos/Tiempo de simulacion.
 
-    Ejemplo Caso 1:
-        998 paquetes/200s ≈ 4.99 pkt/s.
+        Caso 1: 998 paquetes/200s ≈ 4.99 pkt/s.
 
-    Ejemplo Caso 2:
-        Mismo cálculo (998/200 ≈ 4.99 pkt/s).
+        Caso 2: Mismo cálculo (998/200 ≈ 4.99 pkt/s).
 
-3. Delay Promedio (s):
+3. **Delay Promedio (s):**
     Columna Delay en Network.nodeRx.sink.
 
     Valor directo:
@@ -88,8 +86,8 @@ Estos son resultados que nos dio la ejecucion en omnet. Asi tal cual como esta e
 
         Caso 2: 32.8795s (promedio).
 
-4. Ocupación Queue Central:
-        PacketEnqueuedCount en Network.queue.
+4. **Ocupación Queue Central:**
+    PacketEnqueuedCount en Network.queue.
 
     Observacion:
 
@@ -104,4 +102,4 @@ En el caso 1 notamos que el promedio de paquetes en el buffer es de 1, es decir,
 
 Muy bien, ahora miremos qué ocurre en el caso 2. A diferencia del caso anterior, podemos ver por 3 y 4 que hay un delay muchísimo mayor, es decir que tardan más en llegar los paquetes al nodo receptor, y que aparte la cola central tiene en promedio muchísimos más paquetes, pero este buffer solo tenía capacidad para un solo paquete... Podemos decir que encontramos el problema. La cola, al no tener un buffer más grande ni una capacidad mayor de procesamiento, no le queda más que empezar a descartar paquetes. A este problema de aumento de tráfico y limitada capacidad de procesamiento entre el receptor y emisor se le llama "problema de congestión".
 
-Conclusión: Con estos dos casos logramos visualizar dos problemas muy importantes en la red, como es el problema de flujo y congestión. Lo que haremos a continuación (o por lo menos intentaremos) es crear o proponer algoritmos que resuelvan estas problemáticas, pero teniendo en cuenta que deben ser protocolos entre el receptor y el emisor, es decir, tendremos que abstraernos de todo lo relacionado con la cola central.
+**Conclusión:** Con estos dos casos logramos visualizar dos problemas muy importantes en la red, como es el problema de flujo y congestión. Lo que haremos a continuación (o por lo menos intentaremos) es crear o proponer algoritmos que resuelvan estas problemáticas, pero teniendo en cuenta que deben ser protocolos entre el receptor y el emisor, es decir, tendremos que abstraernos de todo lo relacionado con la cola central.
