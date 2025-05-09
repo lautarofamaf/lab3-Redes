@@ -20,11 +20,14 @@ class FeedbackPkt: public cMessage {
       ll   byteLength;
       bool ack;
 
+
     public:
-              int Lose_Packet;
-              float delay;
-                     FeedbackPkt(); // Constructor
+             int Lose_Packet;
+             float delay;
+             FeedbackPkt(); // Constructor
              virtual ~FeedbackPkt(); // Destructor
+
+
             //  // Actualizar tamano del buffer
             //  virtual void setRemainingBuffer(int n);
             //  // Consultar tamano del buffer

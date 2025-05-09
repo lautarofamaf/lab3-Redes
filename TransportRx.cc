@@ -53,22 +53,23 @@ void TransportRx::handleMessage(DataPkt *msg) {
 
 
     FeedbackPkt *feedbackPkt = new FeedbackPkt();
-   if(msg->id==TransportRx.count){
-       TransportRx->count++;
+   if(msg->id==this->count){
+       this->count++;
         send(msg,"toApp");
-        TransportRx->Send_Message_Loose=false;TransportRx->Send_Message_Loose=true;
-        feedbackPkt->delay = simTime()- msg->getCreationTime();
+        this->Send_Message_Loose=false;
+        this->Send_Message_Loose=true;
+        feedbackPkt->delay=simTime().dbl() - msg->getCreationTime().dbl();
         send(feedbackPkt, "toOut$o");
     }
    else{
-    if(TransportRx->Send_Message_Loose==false){
-        TransportRx->Send_Message_Loose=true;
+    if(this->Send_Message_Loose==false){
+        this->Send_Message_Loose=true;
         // FeedbackPkt *feedbackPkt = new Feed                   FeedbackPkt(); // Constructor
-           virtual ~FeedbackPkt(); // DestructorbackPkt();
+           //virtual ~FeedbackPkt(); // DestructorbackPkt();
         // feedbackPkt->setByteLength(20);
         // feedbackPkt->setKind(Feedback);
         // feedbackPkt->setRemainingBuffer(par("bufferSize").intValue() - buffer.getLength());
-        feedBackPkt->Lose_Packet = TransportRx->count;
+        feedbackPkt->Lose_Packet = count;
 
         send(feedbackPkt, "errorMessage");
 
