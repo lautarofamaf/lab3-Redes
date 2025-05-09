@@ -1,7 +1,9 @@
 # Laboratorio 3: Transporte - Redes y Sistemas Distribuidos
+
 ---
 En este laboratorio abordamos problemas de tráfico de red bajo tasas de datos acotadas y tamaño de buffers limitados, trabajando con simulaciones y modelos generados en Omnet++.
 Se divide en dos partes:
+
 + **Parte de análisis:** se analiza el tráfico de una red particular, variando dichas tasas de datos y tamaños de buffers.
 + **Parte de diseño:** dado el análisis anterior se busca mejorar el tráfico de red, aumentando su eficiencia.
 ---
@@ -9,21 +11,27 @@ Se divide en dos partes:
 
 Arrancamos trabajando con un Network basado en un modelo de colas que tiene tres actores:
 1. **Nodo transmisor (NodeTx):** tendrá el generador de paquetes y una cola donde esperarán los paquetes antes de ser enviados. El generador presenta dos parámetros, un *generationInterval* que es el intervalo de generación entre paquetes y un *packetByteSize*, que especifica el tamaño de los paquetes generados (12500 bytes).
-La cola de este nodo tiene un *bufferSize*, que son la cantidad de paquetes que pueden quedarse esperando a ser enviados luego de ser generados y antes de ser descartados, y un *serviceTime*, que es el tiempo que la cola tardará en procesar el paquete, es decir, enviarlo.
-2. **Cola "intermedia" (Queue):** tiene los mismos parámetros que la cola del nodo transmisor, funciona como un buffer entre el nodo transmisor y el nodo receptor, guardando los paquetes antes de ser enviados. El *bufferSize* es de 200 paquetes.
+La cola de este nodo tiene un *bufferSize*, que son la cantidad de paquetes que pueden quedarse esperando a ser enviados luego de ser generados, ene ste caso, 2.000.000; y un *serviceTime*, que es el tiempo que la cola tardará en procesar el paquete, es decir, enviarlo.
+2. **Cola "intermedia" (Queue):** tiene los mismos parámetros que la cola del nodo transmisor, funciona como un buffer entre el nodo transmisor y el nodo receptor, guardando los paquetes antes de ser enviados al receptor.  Esta cola simula el *mundo real*, el control que hace de los paquetes que debe transportar **no** está en "nuestras manos". El *bufferSize* es de 200 paquetes.
 3. **Nodo receptor (NodeRx):** tendrá una cola donde esperarán los paquetes antes de ser finalmente enviados al receptor y el receptor en sí mismo. Esta cola tiene los mismos parámetros que las anteriores.
 
 Analizamos este Network y su funcionamiento para dos casos de estudio:
 + **Caso de estudio 1:** 
     - NodeTx a Queue: *datarate* = 1 Mbps, *delay* = 100 us
     - Queue a NodeRx: *datarate* = 1 Mbps, *delay* = 100 us
-    - Queue a Sink: *datarate* = 0.5 Mbps
+    - Queue a Sink: *datarate* = 0.5 Mbps (Dentro del nodo recibidor)
+    
+    En este caso de estudio notamos que el *cuello de botella* está en el nodo recibidor, en la cola que guarda los paquetes a recibir antes de ser enviados al receptor/consumidor final.
+    
 + **Caso de estudio 2:**
+    
     - NodeTx a Queue: *datarate* = 1 Mbps, *delay* = 100 us
     - Queue a NodeRx: *datarate* = 0.5 Mbps, *delay* = 100 us
     - Queue a Sink: *datarate* = 1 Mbps
+    
+    En este caso de estudio el *cuello de botella* está en la cola intermedia entre nodo emisor y nodo recibidor
 
-Para cada uno de los casos corrimos simulaciones paramétricas con: 
+Para cada uno de los casos corrimos simulaciones paramétricas con:  
 - *generationInterval* = 0.1
 
 
@@ -74,7 +82,7 @@ Estos son resultados que nos dio la ejecucion en omnet. Asi tal cual como esta e
         Throughput=Total paquetes recibidos/Tiempo de simulacion.
 
         Caso 1: 998 paquetes/200s ≈ 4.99 pkt/s.
-
+        
         Caso 2: Mismo cálculo (998/200 ≈ 4.99 pkt/s).
 
 3. **Delay Promedio (s):**
@@ -83,7 +91,7 @@ Estos son resultados que nos dio la ejecucion en omnet. Asi tal cual como esta e
     Valor directo:
 
         Caso 1: 0.4247s (promedio).
-
+        
         Caso 2: 32.8795s (promedio).
 
 4. **Ocupación Queue Central:**
@@ -92,7 +100,7 @@ Estos son resultados que nos dio la ejecucion en omnet. Asi tal cual como esta e
     Observacion:
 
         Caso 1: El buffer reporta un promedio de 1 paquete.
-
+        
         Caso 2: 165.12 paquetes (promedio), lo que indica saturación (el buffer real solo soporta ~1 paquete de 12,500 bytes).
 
 
