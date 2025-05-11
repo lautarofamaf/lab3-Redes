@@ -1,38 +1,57 @@
-# Laboratorio 3: Transporte - Redes y Sistemas Distribuidos
+# Análisis y resolución de conflictos de congestión y flujo en redes usando simulaciones discretas.  
+
+### Laboratorio 3 - Transporte - Redes y Sistemas Distribuidos - FaMAF - UNC
 
 ---
-En este laboratorio abordamos problemas de tráfico de red bajo tasas de datos acotadas y tamaño de buffers limitados, trabajando con simulaciones y modelos generados en Omnet++.
-Se divide en dos partes:
+Abordamos problemas de congestión y flujo en tráfico de red bajo tasas de datos acotadas y tamaño de buffers limitados. Para ello trabajamos analizando dos casos particulares que son simulados y modelados en Omnet++, usando un modelo de colas que varía su configuración a medida que avanzamos con los análisis, llegando así a resolver estos problemas mediante algoritmos 
 
-+ **Parte de análisis:** se analiza el tráfico de una red particular, variando dichas tasas de datos y tamaños de buffers.
-+ **Parte de diseño:** dado el análisis anterior se busca mejorar el tráfico de red, aumentando su eficiencia.
+### AGREGAR ALGORITMO FINAL 
+
+que se encargan de controlarlos
+
 ---
-## Parte de análisis
+## Introducción
 
-Arrancamos trabajando con un Network basado en un modelo de colas que tiene tres actores:
-1. **Nodo transmisor (NodeTx):** tendrá el generador de paquetes y una cola donde esperarán los paquetes antes de ser enviados. El generador presenta dos parámetros, un *generationInterval* que es el intervalo de generación entre paquetes y un *packetByteSize*, que especifica el tamaño de los paquetes generados (12500 bytes).
-La cola de este nodo tiene un *bufferSize*, que son la cantidad de paquetes que pueden quedarse esperando a ser enviados luego de ser generados, ene ste caso, 2.000.000; y un *serviceTime*, que es el tiempo que la cola tardará en procesar el paquete, es decir, enviarlo.
-2. **Cola "intermedia" (Queue):** tiene los mismos parámetros que la cola del nodo transmisor, funciona como un buffer entre el nodo transmisor y el nodo receptor, guardando los paquetes antes de ser enviados al receptor.  Esta cola simula el *mundo real*, el control que hace de los paquetes que debe transportar **no** está en "nuestras manos". El *bufferSize* es de 200 paquetes.
-3. **Nodo receptor (NodeRx):** tendrá una cola donde esperarán los paquetes antes de ser finalmente enviados al receptor y el receptor en sí mismo. Esta cola tiene los mismos parámetros que las anteriores.
+El control de flujo y congestión en redes de sistemas es una de las problemáticas centrales de la materia. Tanto el **control de congestión** como el **control de flujo** se encargan de moderar el tráfico entre nodos transmisores, la red y nodos receptores para evitar saturaciones en alguno de los actores y así evitar pérdidas de datos durante la transferencia de información. La diferencia entre uno y otro radica en *qué* actores de la red están involucrados y por lo tanto *qué* actores serán los encargados de gestionar los recursos de forma que se garantice un tráfico confiable y eficiente entre ellos.
 
-Analizamos este Network y su funcionamiento para dos casos de estudio:
+La **congestión** se da en la red. Un nodo transmisor envía información a un nodo receptor a través de ella, si esta red no es lo suficientemente rápida y eficiente entonces un transmisor muy rápido podría saturarla, disminuyendo no solo la velocidad de viaje hasta el receptor de esta información sino, ocasionalmente, la cantidad de información enviada en un principio (la red podría descartar información si no fuese capaz de almacenarla hasta poder enviarla). Dadas estas improntas, conlcuimos en que el **control de congestión** involucra al *nodo transmisor* y a *la red*. Como la red es un actor "independiente", el actor encargado de gestionar el tráfico para que esta no se sature es el *nodo transmisor*.
+
+El **control de flujo** es un proceso de extremo a extremo, es decir entre nodo transmisor y nodo receptor. Un transmisor muy rápido podría saturar un receptor muy lento, generando los mismos resultado explicados en el párrafo anterior. Así, concluimos que los actores involucrados son el *nodo transmisor* y el *nodo receptor*, la diferencia es que aquí es el *nodo receptor* quién debe gestionar en qué forma recibe la información del *transmisor*.
+
+Para modelizar estos problemas de control de flujo y congestión utilizamos lo que se llama **simulación discreta**. Las simulaciones discretas buscan representar sistemas cuyas variables de estado cambian únicamente en un conjunto discreto de instantes en el tiempo, por eso usamos Omnet++, con un tiempo limitado de simulación y acumuladores estadísticos que reflejan el cambio de estas variables que se modifican una cierta cantidad de veces *dentro* de ese tiempo. Este tipo de simulaciones es muy útil cuando experimentar con el sistema real es muy complicado y también cuando tenemos la necesidad de analizar ese sistema en tiempo real, ambas utilidades atraviesan las problemáticas tratadas. Unas de las ventajas que más nos benefician es que, una vez que el modelo está construido, se puede utilizar repetidamente para analizar el mismo problema en distintos conextos y que esos contextos pueden ser controlados por el usuario, que es la forma en que abordamos este análisis y luego resolución de los problemas de flujo y congestión en una red.
+
+El sistema simulado a analizar consiste en un modelo de colas conformado por:
+
+1. **Nodo transmisor (NodeTx):** tendrá el generador de paquetes que se enviarán a través de la red y una cola donde esperarán dichos paquetes antes de ser enviados a dicha red. El generador presenta dos parámetros, un *generationInterval* que es el intervalo de generación entre paquetes y un *packetByteSize*, que especifica el tamaño de los paquetes generados (12500 bytes).
+   La cola de este nodo tiene un *bufferSize*, que son la cantidad de paquetes que pueden quedarse esperando a ser enviados luego de ser generados, en este caso, 2.000.000; y un *serviceTime*, que es el tiempo que la cola tardará en "procesar" el paquete, es decir, enviarlo.
+2. **Cola "intermedia" (Queue):** tiene los mismos parámetros que la cola del nodo transmisor, funciona como un buffer entre el nodo transmisor y el nodo receptor, guardando los paquetes antes de ser enviados al receptor.  Esta cola simula *la red*, mencionada en los párrafos anteriores, por lo tanto, el control que hace de los paquetes que debe transportar **no** está en "nuestras manos". Su *bufferSize* es de 200 paquetes, mucho más limitado que el del nodo transmisor.
+3. **Nodo receptor (NodeRx):** tendrá una cola donde esperarán los paquetes antes de ser finalmente enviados al receptor y el receptor en sí mismo. Esta cola tiene los mismos parámetros que las anteriores, su *bufferSize* es igual de limitado que el de *la red* (Queue)
+
+Estos tres actores estan conectados en una red Network. Analizamos su funcionamiento para dos casos de estudio:
+
 + **Caso de estudio 1:** 
-    - NodeTx a Queue: *datarate* = 1 Mbps, *delay* = 100 us
-    - Queue a NodeRx: *datarate* = 1 Mbps, *delay* = 100 us
-    - Queue a Sink: *datarate* = 0.5 Mbps (Dentro del nodo recibidor)
-    
-    En este caso de estudio notamos que el *cuello de botella* está en el nodo recibidor, en la cola que guarda los paquetes a recibir antes de ser enviados al receptor/consumidor final.
-    
+
+  - NodeTx a Queue: *datarate* = 1 Mbps, *delay* = 100 us
+  - Queue a NodeRx: *datarate* = 1 Mbps, *delay* = 100 us
+  - Queue a Sink: *datarate* = 0.5 Mbps (Dentro del nodo receptor)
+
+  En este caso de estudio notamos que el *cuello de botella* está en el nodo receptor en la cola que guarda los paquetes a recibir antes de ser enviados al receptor/consumidor final.
+
 + **Caso de estudio 2:**
-    
-    - NodeTx a Queue: *datarate* = 1 Mbps, *delay* = 100 us
-    - Queue a NodeRx: *datarate* = 0.5 Mbps, *delay* = 100 us
-    - Queue a Sink: *datarate* = 1 Mbps
-    
-    En este caso de estudio el *cuello de botella* está en la cola intermedia entre nodo emisor y nodo recibidor
+
+  - NodeTx a Queue: *datarate* = 1 Mbps, *delay* = 100 us
+  - Queue a NodeRx: *datarate* = 0.5 Mbps, *delay* = 100 us
+  - Queue a Sink: *datarate* = 1 Mbps
+
+  En este caso de estudio el *cuello de botella* está en la cola intermedia, en *la red*, entre nodo emisor y nodo receptor.
 
 Para cada uno de los casos corrimos simulaciones paramétricas con:  
+
 - *generationInterval* = 0.1
+- *generationInterval* = 0.3
+- *generationInterval* = 0.5
+- *generationInterval* = 0.7
+- *generationInterval* = 1
 
 
 ## Caso 1
