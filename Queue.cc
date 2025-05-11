@@ -14,8 +14,6 @@ private:
     cOutVector bufferSizeVector;
     cOutVector packetDropVector;
     cOutVector packetEnqueuedVector;
-    int packetDrop;
-    int packetEnqueued;
 
 public:
     Queue();
@@ -39,9 +37,6 @@ Queue::~Queue() {
 void Queue::initialize() {
     buffer.setName("buffer");
     endServiceEvent = new cMessage("endService");
-    packetDrop = 0;
-    packetEnqueued = 0;
-
     bufferSizeVector.setName("BufferSize");
     packetDropVector.setName("PacketDropCount");
     packetEnqueuedVector.setName("PacketEnqueuedCount");
@@ -49,8 +44,6 @@ void Queue::initialize() {
 }
 
 void Queue::finish() {
-  //  recordScalar("TotalPacketsDropped", packetDrop);
-    //recordScalar("TotalPacketsEnqueued",  packetEnqueued );
 }
 
 void Queue::handleMessage(cMessage *msg) {
@@ -100,14 +93,12 @@ void Queue::handleMessage(cMessage *msg) {
             delete msg;
             this->bubble("packet dropped");
 
-            packetDrop++;
-            packetDropVector.record(packetDrop);  // Acumulativo
+            packetDropVector.record(packetDropVector.getValuesStored() + 1);  // sumo uno a los valores recolectados por el vector.
         }else{
             // enqueue the packet
             buffer.insert(msg);
             bufferSizeVector.record(buffer.getLength());
-            packetEnqueued++;
-            packetEnqueuedVector.record(packetEnqueued); // Acumulativo
+            packetEnqueuedVector.record(packetEnqueuedVector.getValuesStored() + 1); // sumo uno a los valores recolectados por el vector.
             // if the server is idle
             if (!endServiceEvent->isScheduled()) {
                 // start the service

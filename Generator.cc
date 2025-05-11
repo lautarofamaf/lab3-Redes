@@ -39,17 +39,18 @@ void Generator::initialize() {
 }
 
 void Generator::finish() {
+    // record the amount of packets generated and transmitted
+    recordScalar("Total transmissions per sec", (transmissionStats.getCount()) / 200);
 }
 
 void Generator::handleMessage(cMessage *msg) {
-
     // create new packet
     cPacket *pkt = new cPacket("packet");
-
     pkt->setByteLength(par("packetByteSize"));
     // send to the output
     send(pkt, "out");
-
+    // record a new transmission
+    transmissionStats.collect(1);
     // compute the new departure time
     simtime_t departureTime = simTime() + par("generationInterval");
     // schedule the new packet generation

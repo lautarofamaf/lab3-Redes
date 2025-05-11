@@ -36,7 +36,7 @@ void Sink::initialize(){
 void Sink::finish(){
     // stats record at the end of simulation
     recordScalar("Avg delay", delayStats.getMean());
-    recordScalar("Number of packets", delayStats.getCount());
+    recordScalar("Number of packets received per sec", (delayStats.getCount()) / 200);
 }
 
 void Sink::handleMessage(cMessage * msg) {
