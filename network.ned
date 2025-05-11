@@ -34,7 +34,8 @@ simple Sink
 simple TransportTx
 {
     parameters:
-        int bufferSize;
+		int bufferSize; // Tamaño del buffer
+        //double sendInterval; // Intervalo de transmisión
         @display("i=block/queue;q=buffer");
     gates:
         input toApp;
@@ -43,7 +44,7 @@ simple TransportTx
 simple TransportRx
 {
     parameters:
-        int bufferSize;
+          int bufferSize; // Tamaño del buffer del receptor
         @display("i=block/subqueue,,0;q=buffer");
     gates:
         output toApp;
@@ -125,9 +126,9 @@ network Network
     connections:
         nodeTx.out --> {  datarate = 1Mbps; delay = 100us; } --> queueData.in;
 
-        queueFeedback.out --> {  datarate = 1Mbps; delay = 100us; } --> nodeTx.in;
+        queueFeedback.out --> nodeTx.in;
 
-        nodeRx.out --> {  datarate = 1Mbps; delay = 100us; } --> queueFeedback.in;
+        nodeRx.out -->  queueFeedback.in;
         //Case Study 1:
         //queueData.out --> {  datarate = 1Mbps; delay = 100us;  } --> nodeRx.in;
 

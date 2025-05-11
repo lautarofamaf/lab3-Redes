@@ -1,145 +1,179 @@
-#ifndef TRANSPORTTX
-#define TRANSPORTTX
+#ifndef TRANSPORT_TX
+#define TRANSPORT_TX
 
-#include <string.h>
 #include <omnetpp.h>
-
-using namespace omnetpp;
 #include "Packet.h"
+using namespace omnetpp;
 
-class TransportTx: public cSimpleModule {
-    private:
-        cQueue buffer;
-        cMessage *endServiceEvent;
-        simtime_t serviceTime;
-        cOutVector bufferSizeVector;
-        cOutVector packetDropVector;
-        cOutVector serviceTimeVector;
+class TransportTx : public cSimpleModule {
+private:
+    cQueue buffer;                // Cola de paquetes
+    cMessage* endServiceEvent;    // Evento para manejar envíos
+    unsigned int count;           // Contador de secuencia sincronizado
+    unsigned int expectedAck;     // Último número de secuencia reconocido
+    unsigned int bufferSize;      // Tamaño máximo del buffer
+    double feedbackDelay;         // Retraso aplicado al enviar paquetes tras recibir feedback
+    double defaultDelay;          // Valor base del retraso (opcional)
+    cOutVector bufferSizeVector;  // Vector para monitorear el tamaño del buffer
 
+public:
+    TransportTx();
+    ~TransportTx() override;
 
-    public:
-        float last_delay = 50;
-        bool is_bussy = false;
-        float delay = 0;
-        int count=0;
-        TransportTx();
-        virtual ~TransportTx();
-    protected:
-        virtual void initialize();
-        virtual void finish();
-        virtual void handleMessage(DataPkt *msg);
+protected:
+    void initialize() override;
+    void handleMessage(cMessage* msg) override;
+
+private:
+    void handleEndServiceEvent();      // Maneja el evento de envío
+    void handleDataPacket(DataPkt* pkt); // Maneja paquetes entrantes de tipo DataPkt
+    void handleFeedbackPacket(FeedbackPkt* pkt); // Maneja feedback del receptor
+
 };
 
 Define_Module(TransportTx);
 
-TransportTx::TransportTx() {
-    endServiceEvent = NULL;
-}
+TransportTx::TransportTx() : endServiceEvent(nullptr), count(0), expectedAck(0), bufferSize(0) {}
 
 TransportTx::~TransportTx() {
-
     cancelAndDelete(endServiceEvent);
+    while (!buffer.isEmpty()) {
+        delete buffer.pop();
+    }
 }
 
 void TransportTx::initialize() {
-    buffer.setName("buffer");
     endServiceEvent = new cMessage("endService");
-    serviceTimeVector.setName("serviceTime");//quiero guardar un vector para analizar tiempo de transmisión de los paquetes
+    bufferSize = par("bufferSize"); // Tamaño máximo del buffer definido en el archivo .ini
 
+    // Inicializa el retraso
+    feedbackDelay = 0.0;
+    defaultDelay = 0.0; // Retraso base en segundos, ajustable desde el archivo .ini
+
+    // Configura vectores para monitorear estadísticas
+    bufferSizeVector.setName("BufferSize");
+    bufferSizeVector.record(buffer.getLength());
 }
 
-void TransportTx::finish() {
-}
-
-void TransportTx::handleMessage(DataPkt *msg) {
-
-    if(msg->getKind()==Undefined){
-         //     msg->setKind(Data);
-        DataPkt *dataPkt = (DataPkt*) msg;
-        msg->id = this->count;
-        this->count++;
-    }
-    else if(msg->getKind()==Feedback){
-        FeedbackPkt *feedbackPkt = (FeedbackPkt *)msg;
-
-       if(feedbackPkt->Lose_Packet==-1){
-        if(feedbackPkt->delay>this->last_delay+50){
-            this->last_delay=feedbackPkt->delay;
-            this->is_bussy=true;
-            delete msg;
-            return;
-        }
-        else {
-            this->last_delay=feedbackPkt->delay;
-            this->is_bussy=false;
-            delete msg;
-            return;
-        }
-    } else{
-        this->count=feedbackPkt->Lose_Packet;
-        this->is_bussy=true;
-        delete msg;
-        return;
-
-       }
-
-         // // si me dicen que el buffer ta lleno, me rescato
-        // // si no, mantengo velocidad
-        // FeedbackPkt *feedbackPkt = (FeedbackPkt*) msg;
-        // // hacer algo con la info de feedback pkt
-        // int remainingBuffer = feedbackPkt->getRemainingBuffer();
-        // // code
-
-    }   else if(msg->getKind()==Data){
-
-    }// if msg is signaling an endServiceEvent
+void TransportTx::handleMessage(cMessage* msg) {
     if (msg == endServiceEvent) {
-        // if packet in buffer, send next one
-        if (!buffer.isEmpty()) {
-
-            cPacket *pkt = (cPacket*) buffer.pop();
-
-            send(pkt, "toOut");
-
-            serviceTime = pkt->getDuration();
-            serviceTimeVector.record(serviceTime)   ;
-
-            scheduleAt(simTime() + serviceTime, endServiceEvent);
-        }
-
-    } else { // if msg is a data packet
-        if(buffer.getLength() >= par("bufferSize").intValue()){
-            //drop the packet
-            delete msg;
-          //   this->bubble("packet dropped");
-            packetDropVector.record(1);
-
-        }else{
-            // enqueue the packet
-            buffer.insert(msg);
-            bufferSizeVector.record(buffer.getLength());
-
-            // if the server is idle
-            if (!endServiceEvent->isScheduled()) {
-                // start the service
-                if(is_bussy){
-                    this->delay += 10;
-                }
-                else{
-                    if(this->delay>10){
-                        this->delay -=10 ;
-                    }
-                    else{
-                        this->delay = 0;
-                    }
-                    }
-                scheduleAt(simTime() + this->delay, endServiceEvent);
-            }
-        }
+        handleEndServiceEvent();
+    } else if (auto* dataPkt = dynamic_cast<DataPkt*>(msg)) {
+        handleDataPacket(dataPkt);
+    } else if (auto* feedbackPkt = dynamic_cast<FeedbackPkt*>(msg)) {
+        handleFeedbackPacket(feedbackPkt);
+    } else {
+        EV_ERROR << "[TransportTx] Mensaje desconocido, descartando.\n";
+        delete msg;
     }
 }
-#endif
+
+void TransportTx::handleDataPacket(DataPkt* pkt) {
+    if (buffer.getLength() >= bufferSize) {
+        EV_WARN << "[TransportTx] Buffer lleno, descartando paquete.\n";
+        delete pkt;
+        return;
+    }
+
+    pkt->setId(count++);
+    buffer.insert(pkt);
+    bufferSizeVector.record(buffer.getLength());
+
+    EV_INFO << "[TransportTx] Paquete recibido y asignado seqNum: " << pkt->getId() << "\n";
+
+    // Programa el envío inmediato si no hay eventos programados
+    if (!endServiceEvent->isScheduled()) {
+        scheduleAt(simTime(), endServiceEvent);
+    }
+}
+
+void TransportTx::handleEndServiceEvent() {
+    EV_INFO << "[TransportTx] Intentando enviar el siguiente paquete." << std::endl;
+
+    // Verificar si el buffer está vacío
+    if (buffer.isEmpty()) {
+        EV_WARN << "[TransportTx] No hay paquetes para enviar." << std::endl;
+        return;
+    }
+
+    // Buscar el siguiente paquete listo para enviar
+    DataPkt* pktToSend = nullptr;
+    for (int i = 0; i < buffer.getLength(); ++i) {
+        auto* pkt = check_and_cast<DataPkt*>(buffer.get(i)); // Obtener el elemento i del buffer
+        if (pkt->getId() >= expectedAck) {  // Enviar desde expectedAck en adelante
+            pktToSend = pkt;
+            break;
+        }
+    }
+    if (!pktToSend) {
+        EV_WARN << "[TransportTx] No hay paquetes listos para enviar." << std::endl;
+        return;
+    }
+
+    EV_INFO << "[TransportTx] Enviando paquete con seqNum: " << pktToSend->getId() << std::endl;
+
+    // Duplicar el paquete para enviarlo
+    auto* dupPkt = pktToSend->dup();
+
+    // Enviar el paquete al siguiente módulo
+    send(dupPkt, "toOut$o");
+
+    // Actualizar el buffer eliminando el paquete enviado
+    buffer.remove(pktToSend); // Eliminar el paquete del buffer
+    delete pktToSend;         // Liberar memoria del paquete original
+    bufferSizeVector.record(buffer.getLength());
+
+    EV_INFO << "[TransportTx] Paquete enviado. Buffer actual: " << buffer.getLength() << " paquetes." << std::endl;
+
+    // Reducir gradualmente el retraso si el sistema se estabiliza
+    if (feedbackDelay > defaultDelay) {
+        feedbackDelay -= 0.025; // Reduce el retraso en 5 ms después de cada envío exitoso
+        if (feedbackDelay < defaultDelay) {
+            feedbackDelay = defaultDelay; // No permitir que el retraso sea menor al valor base
+        }
+    }
+
+    // Programar el próximo evento de servicio
+    auto serviceTime = dupPkt->getDuration();  // Obtener la duración del paquete
+    auto endServiceTime = simTime() + serviceTime + feedbackDelay;
+    scheduleAt(endServiceTime, endServiceEvent);
+}
+
+
+void TransportTx::handleFeedbackPacket(FeedbackPkt* pkt) {
+    unsigned int ackNumber = pkt->getLose_Packet(); // Usar el campo Lose_Packet como el número de ACK
+    bool isCongestion = pkt->isCongestion(); // Revisar si el feedback indica congestión
+    delete pkt;
+
+    if (isCongestion) {
+        // Caso de congestión: incrementar el retraso
+        feedbackDelay += 1; // Incrementa el retraso en 50 ms
+        EV_INFO << "[TransportTx] Congestión detectada, aumentando retraso a " << feedbackDelay << " segundos.\n";
+    } else {
+        // Caso de pérdida de paquetes: retransmitir desde el paquete perdido
+        EV_INFO << "[TransportTx] Pérdida detectada, retransmitiendo desde ackNumber: " << ackNumber << "\n";
+
+        if (ackNumber >= expectedAck) {
+            expectedAck = ackNumber;  // Reinicia el contador a partir del paquete perdido
+            count = expectedAck;     // Sincroniza el contador con el nuevo expectedAck
+
+            // Limpia el buffer de paquetes confirmados
+            while (!buffer.isEmpty() && static_cast<DataPkt*>(buffer.front())->getId() < expectedAck) {
+                delete buffer.pop();
+            }
+            bufferSizeVector.record(buffer.getLength());
+        }
+
+        // Incrementa el retraso para dar tiempo a la cola de vaciarse
+        feedbackDelay += 1; // Incrementa el retraso en caso de pérdida
+    }
+
+    // Si hay más paquetes para enviar, ajusta la programación con el nuevo retraso
+    if (!endServiceEvent->isScheduled() && !buffer.isEmpty()) {
+        scheduleAt(simTime() + feedbackDelay, endServiceEvent);
+    }
+}
 
 
 
-
+#endif /* TRANSPORT_TX */

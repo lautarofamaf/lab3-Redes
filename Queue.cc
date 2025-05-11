@@ -56,7 +56,7 @@ void Queue::handleMessage(cMessage *msg) {
         if (!buffer.isEmpty()) {
             // dequeue packet
             // -> [p1,p2,p3] ->
-            cPacket *pkt = (cPacket*) buffer.pop();
+            cPacket* pkt = dynamic_cast<cPacket*>(buffer.pop());
             // -> [p1,p2,  ] ->
             //           p3 <- pkt
             // send packet
