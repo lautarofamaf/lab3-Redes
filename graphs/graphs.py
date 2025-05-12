@@ -56,10 +56,48 @@ plt.show()
 # tiempo vs paquetes perdidos
 # extraigo y enlisto
 dropped_time_sink = list(map(float, (data_c1['vectime'].iloc[33]).split()))
-dropped_pck = list(map(float, (data_c1['vecvalue'].iloc[33]).split()))
+dropped_pck_sink = list(map(float, (data_c1['vecvalue'].iloc[33]).split()))
 
-plt.plot(dropped_time_sink, dropped_pck, color='tab:pink')
+plt.plot(dropped_time_sink, dropped_pck_sink, color='tab:pink')
 plt.title('Pérdida de paquetes en el nodo receptor')
+plt.xlabel('tiempo de simulación')
+plt.ylabel('paquetes perdidos hasta el momento')
+plt.show()
+
+# CASO 2 - mismos gráficos que para el caso 1, pero ahora revisamos la queue intermedia
+
+usecols = ["vectime", "vecvalue"]
+data_c2 = pandas.read_csv('c2-PackDrop-0-1.csv', usecols=usecols)
+# imprimo lo leido para saber cómo indexar las filas
+file = open("data_c2.txt", "w")
+file.write(str(data_c2))
+file.close()
+
+# tiempo vs tamaño de buffers
+# extraigo los datos del archivo y los convierto en una lista
+time_gen = list(map(float, (data_c2['vectime'].iloc[26]).split()))
+time_queue = list(map(float, (data_c2['vectime'].iloc[28]).split()))
+time_sink = list(map(float, (data_c2['vectime'].iloc[30]).split()))
+buffer_gen = list(map(float, (data_c2['vecvalue'].iloc[26]).split()))
+buffer_queue = list(map(float, (data_c2['vecvalue'].iloc[28]).split()))
+buffer_sink = list(map(float, (data_c2['vecvalue'].iloc[30]).split()))
+
+plt.plot(time_gen, buffer_gen, color='tab:cyan', label="Nodo transmisor")
+plt.plot(time_queue, buffer_queue, color='tab:pink', label="Cola intermedia, la red")
+plt.plot(time_sink, buffer_sink, color='tab:purple', label="Nodo receptor")
+plt.title('Tamaño de los buffers de la red')
+plt.xlabel('tiempo de simulación')
+plt.ylabel('cantidad de paquetes en en el buffer')
+plt.legend()
+plt.show()
+
+# tiempo vs paquetes perdidos
+# extraigo y enlisto
+dropped_time_queue = list(map(float, (data_c2['vectime'].iloc[33]).split()))
+dropped_pck_queue = list(map(float, (data_c2['vecvalue'].iloc[33]).split()))
+
+plt.plot(dropped_time_queue, dropped_pck_queue, color='tab:pink')
+plt.title('Pérdida de paquetes en la cola intermedia')
 plt.xlabel('tiempo de simulación')
 plt.ylabel('paquetes perdidos hasta el momento')
 plt.show()
