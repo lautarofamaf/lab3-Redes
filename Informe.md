@@ -1,11 +1,11 @@
-# Análisis y resolución de conflictos de congestión y flujo en redes usando simulaciones discretas.  
+# Análisis y resolución de conflictos de congestión y flujo en redes usando simulaciones discretas.
 
 ### Laboratorio 3 - Transporte - Redes y Sistemas Distribuidos - FaMAF - UNC
 
 ---
-Abordamos problemas de congestión y flujo en tráfico de red bajo tasas de datos acotadas y tamaño de buffers limitados. Para ello trabajamos analizando dos casos particulares que son simulados y modelados en Omnet++, usando un modelo de colas que varía su configuración a medida que avanzamos con los análisis, llegando así a resolver estos problemas mediante algoritmos 
+Abordamos problemas de congestión y flujo en tráfico de red bajo tasas de datos acotadas y tamaño de buffers limitados. Para ello trabajamos analizando dos casos particulares que son simulados y modelados en Omnet++, usando un modelo de colas que varía su configuración a medida que avanzamos con los análisis, llegando así a resolver estos problemas mediante algoritmos
 
-### AGREGAR ALGORITMO FINAL 
+### AGREGAR ALGORITMO FINAL
 
 que se encargan de controlarlos
 
@@ -29,7 +29,7 @@ El sistema simulado a analizar consiste en un modelo de colas conformado por:
 
 Estos tres actores estan conectados en una red Network. Analizamos su funcionamiento para dos casos de estudio:
 
-+ **Caso de estudio 1:** 
++ **Caso de estudio 1:**
 
   - NodeTx a Queue: *datarate* = 1 Mbps, *delay* = 100 us
   - Queue a NodeRx: *datarate* = 1 Mbps, *delay* = 100 us
@@ -45,7 +45,7 @@ Estos tres actores estan conectados en una red Network. Analizamos su funcionami
 
   En este caso de estudio el *cuello de botella* está en la cola intermedia, en *la red*, entre nodo emisor y nodo receptor.
 
-Para cada uno de los casos corrimos simulaciones paramétricas con:  
+Para cada uno de los casos corrimos simulaciones paramétricas con:
 
 - *generationInterval* = 0.1
 - *generationInterval* = 0.3
@@ -56,33 +56,33 @@ Para cada uno de los casos corrimos simulaciones paramétricas con:
 
 ## Caso 1
 
-Experiment	Measurement	Replication	Module	Name	Count	Mean	StdDev	Variance	
-General		#0	Network.nodeTx.gen	packetGen	1979	1	0	0	
-General		#0	Network.nodeTx.queue	BufferSize	1979	13.072764	8.249200	68.049303	
-General		#0	Network.nodeTx.queue	PacketEnqueuedCount	1979	990	571.432411	326,535	
-General		#0	Network.queue	BufferSize	1970	1	0	0	
-General		#0	Network.queue	PacketEnqueuedCount	1970	985.500000	568.834334	323,572.500000	
-General		#0	Network.nodeRx.queue	BufferSize	1199	165.121768	59.178913	3,502.143758	
-General		#0	Network.nodeRx.queue	PacketEnqueuedCount	1199	600	346.265794	119,900	
-General		#0	Network.nodeRx.sink	PacketUsed	998	1	0	0	
-General		#0	Network.nodeRx.sink	Delay	998	32.879469	12.874907	165.763227	
+Experiment	Measurement	Replication	Module	Name	Count	Mean	StdDev	Variance
+General		#0	Network.nodeTx.gen	packetGen	1979	1	0	0
+General		#0	Network.nodeTx.queue	BufferSize	1979	13.072764	8.249200	68.049303
+General		#0	Network.nodeTx.queue	PacketEnqueuedCount	1979	990	571.432411	326,535
+General		#0	Network.queue	BufferSize	1970	1	0	0
+General		#0	Network.queue	PacketEnqueuedCount	1970	985.500000	568.834334	323,572.500000
+General		#0	Network.nodeRx.queue	BufferSize	1199	165.121768	59.178913	3,502.143758
+General		#0	Network.nodeRx.queue	PacketEnqueuedCount	1199	600	346.265794	119,900
+General		#0	Network.nodeRx.sink	PacketUsed	998	1	0	0
+General		#0	Network.nodeRx.sink	Delay	998	32.879469	12.874907	165.763227
 General		#0	Network.nodeRx.queue	PacketDropCount	770	385.500000	222.424144	49,472.500000
 
 ## Caso 2
 
-Experiment	Measurement	Replication	Module	Name	Count	Mean	StdDev	Variance	
-General		#0	Network.nodeTx.gen	packetGen	1979	1	0	0	
-General		#0	Network.nodeTx.queue	BufferSize	1979	13.072764	8.249200	68.049303	
-General		#0	Network.nodeTx.queue	PacketEnqueuedCount	1979	990	571.432411	326,535	
-General		#0	Network.queue	BufferSize	1199	165.121768	59.178913	3,502.143758	
-General		#0	Network.queue	PacketEnqueuedCount	1199	600	346.265794	119,900	
-General		#0	Network.nodeRx.queue	BufferSize	999	1	0	0	
-General		#0	Network.nodeRx.queue	PacketEnqueuedCount	999	500	288.530761	83,250	
-General		#0	Network.nodeRx.sink	PacketUsed	998	1	0	0	
-General		#0	Network.nodeRx.sink	Delay	998	32.879469	12.874907	165.763227	
-General		#0	Network.queue	PacketDropCount	771	386	222.712820	49,601	
+Experiment	Measurement	Replication	Module	Name	Count	Mean	StdDev	Variance
+General		#0	Network.nodeTx.gen	packetGen	1979	1	0	0
+General		#0	Network.nodeTx.queue	BufferSize	1979	13.072764	8.249200	68.049303
+General		#0	Network.nodeTx.queue	PacketEnqueuedCount	1979	990	571.432411	326,535
+General		#0	Network.queue	BufferSize	1199	165.121768	59.178913	3,502.143758
+General		#0	Network.queue	PacketEnqueuedCount	1199	600	346.265794	119,900
+General		#0	Network.nodeRx.queue	BufferSize	999	1	0	0
+General		#0	Network.nodeRx.queue	PacketEnqueuedCount	999	500	288.530761	83,250
+General		#0	Network.nodeRx.sink	PacketUsed	998	1	0	0
+General		#0	Network.nodeRx.sink	Delay	998	32.879469	12.874907	165.763227
+General		#0	Network.queue	PacketDropCount	771	386	222.712820	49,601
 
-Estos son resultados que nos dio la ejecucion en omnet. Asi tal cual como esta es dificil entender y mas aun sacar una conclusion, por lo que haremos algunas operaciones con los datos para poder observar mas de cerca que esta sucediendo. 
+Estos son resultados que nos dio la ejecucion en omnet. Asi tal cual como esta es dificil entender y mas aun sacar una conclusion, por lo que haremos algunas operaciones con los datos para poder observar mas de cerca que esta sucediendo.
 
 1. **% Paquetes Perdidos:**
     PacketDropCount (paquetes descartados) vs PacketEnqueuedCount (paquetes encolados).
@@ -101,7 +101,7 @@ Estos son resultados que nos dio la ejecucion en omnet. Asi tal cual como esta e
         Throughput=Total paquetes recibidos/Tiempo de simulacion.
 
         Caso 1: 998 paquetes/200s ≈ 4.99 pkt/s.
-        
+
         Caso 2: Mismo cálculo (998/200 ≈ 4.99 pkt/s).
 
 3. **Delay Promedio (s):**
@@ -110,7 +110,7 @@ Estos son resultados que nos dio la ejecucion en omnet. Asi tal cual como esta e
     Valor directo:
 
         Caso 1: 0.4247s (promedio).
-        
+
         Caso 2: 32.8795s (promedio).
 
 4. **Ocupación Queue Central:**
@@ -119,7 +119,7 @@ Estos son resultados que nos dio la ejecucion en omnet. Asi tal cual como esta e
     Observacion:
 
         Caso 1: El buffer reporta un promedio de 1 paquete.
-        
+
         Caso 2: 165.12 paquetes (promedio), lo que indica saturación (el buffer real solo soporta ~1 paquete de 12,500 bytes).
 
 
@@ -130,3 +130,62 @@ En el caso 1 notamos que el promedio de paquetes en el buffer es de 1, es decir,
 Muy bien, ahora miremos qué ocurre en el caso 2. A diferencia del caso anterior, podemos ver por 3 y 4 que hay un delay muchísimo mayor, es decir que tardan más en llegar los paquetes al nodo receptor, y que aparte la cola central tiene en promedio muchísimos más paquetes, pero este buffer solo tenía capacidad para un solo paquete... Podemos decir que encontramos el problema. La cola, al no tener un buffer más grande ni una capacidad mayor de procesamiento, no le queda más que empezar a descartar paquetes. A este problema de aumento de tráfico y limitada capacidad de procesamiento entre el receptor y emisor se le llama "problema de congestión".
 
 **Conclusión:** Con estos dos casos logramos visualizar dos problemas muy importantes en la red, como es el problema de flujo y congestión. Lo que haremos a continuación (o por lo menos intentaremos) es crear o proponer algoritmos que resuelvan estas problemáticas, pero teniendo en cuenta que deben ser protocolos entre el receptor y el emisor, es decir, tendremos que abstraernos de todo lo relacionado con la cola central.
+
+## Algoritmos de **Control de Congestion y Flujo**
+
+Durante las simulaciones realizadas, identificamos dos problemas principales en la red: **pérdida de paquetes** y un **nodo receptor completamente colapsado**. Estos problemas nos enontramos  en los casos tratados1. Para abordar estas problemáticas, diseñamos e implementamos algoritmos que buscan eliminar la congestión y el flujo descontrolado, para un mejor rendimiento.
+
+El **problema de flujo** ocurre cuando el nodo transmisor envía paquetes a una velocidad mayor de la que el nodo receptor puede procesar. Esto genera una acumulación de paquetes en el buffer del receptor, que eventualmente se desborda, resultando en la pérdida de datos. Para resolver este problema, es necesario implementar un mecanismo de control de flujo que permita al receptor regular la velocidad de transmisión del emisor, asegurando que no se envíen más paquetes de los que el receptor puede manejar.
+
+Por otro lado, el **problema de congestión** se presenta cuando la capacidad de la red intermedia (representada por la cola central en nuestras simulaciones) es insuficiente para manejar el tráfico generado por el nodo transmisor. Esto provoca un aumento en el tiempo de espera de los paquetes y, eventualmente, el descarte de los mismos debido a la saturación del buffer. Se requiere un algoritmo de control de congestión que permita al transmisor ajustar dinámicamente su tasa de envío en función de las condiciones de la red.
+
+Con nuestro equipo de trabajo fuimos un poco mas a la hora de implementar un algoritmos que solucione ambos problemas en nuestra pequeña simulacion. Pero esto requeria prevenciòn entoces decidimos tener un algorimto secillo de respaldo (este es solo un esquema bastante bueno de resolucion, que iba  a ser terminado y detallado, si solo si, No lograbamos implementar el algoritmo )
+
+
+
+## Algoritmo PLAN-B
+
+Este algorimo consta de agragarle un delay a la cola del nodo transmisor
+
+y pasar de  :
+```cpp
+scheduleAt(simTime() + 0, endServiceEvent);
+```
+a capturar y darle cierto tiempo de delay
+```cpp
+   scheduleAt(simTime() + this->delay, endServiceEvent);
+```
+
+Aqui el nodo (transporTx) tiene cierto tiempo para largar los datos, esto ayuda a que la queue real tenga tiempo para procesar paquetes y enviarlos hacia transporRx, y tambien esa espera del inicio hace que la ventana del receptor no se desborde. Se solucionan ambos problemas.
+
+### Como se calcula el delay
+
+
+TransporRx calcula constantemente el delay del ultimo paquete y le envia ese resultado a transporTx.
+```cpp
+    feedbackPkt->delay = simTime().dbl() - msg->getCreationTime().dbl();
+    send(feedbackPkt, "toOut$o");
+```
+Con esa informaciòn claculamos que delay tendra la cola de este nodo
+
+```cpp
+this->is_bussy = (feedbackPkt->delay > this->last_delay + 0.05);
+this->last_delay = feedbackPkt->delay;
+```
+**Comparación del Delay**: Se compara el delay recibido **(feedbackPkt->delay)** con el último delay registrado (this->last_delay) más un margen de tolerancia (0.05 segundos). Si el delay actual es mayor, se considera que la cola del receptor está saturada (is_bussy = true).
+**Actualización del Delay**: El valor del delay recibido se almacena como el nuevo last_delay.
+```cpp
+if (is_bussy) {
+    this->delay += 40;
+} else {
+    if (this->delay > 40) {
+        this->delay = 40;
+    } else {
+        this->delay = 0;
+    }
+}
+scheduleAt(simTime() + this->delay, endServiceEvent);
+```
+**Incremento del Delay**: Si el receptor está ocupado (is_bussy = true), se incrementa el delay en 40 unidades.
+**Reducción del Delay**: Si el receptor no está ocupado, el delay se reduce gradualmente hasta un máximo de 40 unidades o se elimina por completo (this->delay = 0).
+Programación del Evento: El transmisor programa el envío del siguiente paquete con el delay ajustado.
