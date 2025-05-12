@@ -13,7 +13,7 @@ private:
     unsigned int expectedAck;     // Último número de secuencia reconocido
     unsigned int bufferSize;      // Tamaño máximo del buffer
     double feedbackDelay;         // Retraso aplicado al enviar paquetes tras recibir feedback
-    double defaultDelay;          // Valor base del retraso (opcional)
+    double defaultDelay;          // Valor base del retraso
     cOutVector bufferSizeVector;  // Vector para monitorear el tamaño del buffer
 
 public:
@@ -44,14 +44,14 @@ TransportTx::~TransportTx() {
 
 void TransportTx::initialize() {
     endServiceEvent = new cMessage("endService");
-    bufferSize = par("bufferSize"); // Tamaño máximo del buffer definido en el archivo .ini
+    bufferSize = par("bufferSize"); // Tamaño máximo del buffer definido
 
     // Inicializa el retraso
     feedbackDelay = 0.0;
-    defaultDelay = 0.0; // Retraso base en segundos, ajustable desde el archivo .ini
+    defaultDelay = 0.0; // Retraso base en segundos
 
     // Configura vectores para monitorear estadísticas
-    bufferSizeVector.setName("BufferSize");
+    bufferSizeVector.setName("bufferSize");
     bufferSizeVector.record(buffer.getLength());
 }
 

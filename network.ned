@@ -34,7 +34,7 @@ simple Sink
 simple TransportTx
 {
     parameters:
-		int bufferSize; // Tamaño del buffer
+        int bufferSize; // Tamaño del buffer
         //double sendInterval; // Intervalo de transmisión
         @display("i=block/queue;q=buffer");
     gates:
@@ -44,8 +44,8 @@ simple TransportTx
 simple TransportRx
 {
     parameters:
-          int bufferSize; // Tamaño del buffer del receptor
-        @display("i=block/subqueue,,0;q=buffer");
+        int bufferSize; // Tamaño del buffer del receptor
+        @display("i=block/queue;q=buffer");
     gates:
         output toApp;
         inout toOut;
@@ -68,7 +68,7 @@ module NodeTx
         }
         traTx: TransportTx {
             parameters:
-                @display("p=75,190;i=block/subqueue");
+                @display("p=75,190");
         }
 
     connections:
@@ -102,9 +102,9 @@ module NodeRx
         traRx.toOut$o --> out;   // El feedback que SALE de traRx va a la salida de NodeRx (gate 'out')
 
         //Case Study 1:
-        //traRx.toApp --> {  datarate = 0.5Mbps;  } --> sink.in;
+        traRx.toApp --> {  datarate = 0.5Mbps; } --> sink.in;
         //Case Study 2:
-        traRx.toApp --> {  datarate = 1Mbps; } --> sink.in;
+        //traRx.toApp --> {  datarate = 1Mbps; } --> sink.in;
 }
 // (Generattor -> Queue) -> Queue -> (Queue -> Sink)
 network Network
@@ -128,12 +128,12 @@ network Network
 
         queueFeedback.out --> nodeTx.in;
 
-        nodeRx.out -->  queueFeedback.in;
+        nodeRx.out --> queueFeedback.in;
         //Case Study 1:
-        //queueData.out --> {  datarate = 1Mbps; delay = 100us;  } --> nodeRx.in;
+        queueData.out --> {  datarate = 1Mbps; delay = 100us; } --> nodeRx.in;
 
         //Case Study 2:
-        queueData.out --> {  datarate = 0.5Mbps; delay = 100us; } --> nodeRx.in;
+        //queueData.out --> {  datarate = 0.5Mbps; delay = 100us; } --> nodeRx.in;
 
 }
 

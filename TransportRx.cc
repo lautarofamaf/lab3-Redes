@@ -10,9 +10,11 @@ class TransportRx : public cSimpleModule {
 private:
     unsigned int expectedSeqNum;      // Número de secuencia esperado (contador sincronizado)
     unsigned int lastFeedbackSeqNum;  // Último número de secuencia para el que se envió un FeedbackPkt
-    cPacketQueue queue;               // Cola de paquetes en espera para ser transmitidos
+    cQueue buffer;               // Cola de paquetes en espera para ser transmitidos
     cMessage* endTransmissionEvent;   // Evento para manejar el final de la transmisión
     unsigned int bufferSize;          // Capacidad máxima del buffer (opcional para monitoreo)
+    cOutVector packetDropVector;
+    cOutVector bufferSizeVector;
 
 public:
     TransportRx();
@@ -33,28 +35,31 @@ TransportRx::TransportRx() : expectedSeqNum(0), lastFeedbackSeqNum(UINT_MAX), en
 
 TransportRx::~TransportRx() {
     cancelAndDelete(endTransmissionEvent);
-    while (!queue.isEmpty()) {
-        delete queue.pop();
+    while (!buffer.isEmpty()) {
+        delete buffer.pop();
     }
 }
 
 void TransportRx::initialize() {
+    buffer.setName("buffer");
     expectedSeqNum = 0; // Inicializa el número esperado en 0
     lastFeedbackSeqNum = UINT_MAX; // Inicializa el seguimiento de feedback
     endTransmissionEvent = new cMessage("endTransmission");
-    bufferSize = par("bufferSize"); // Capacidad máxima del buffer, definida en el archivo .ini
+    bufferSize = par("bufferSize"); // Capacidad máxima del buffer
+    packetDropVector.setName("packetDrops");
+    bufferSizeVector.setName("bufferUsage");
 }
 
 void TransportRx::handleMessage(cMessage* msg) {
     if (msg == endTransmissionEvent) {
         // Intentar enviar el siguiente paquete en la cola
-        if (!queue.isEmpty()) {
-            auto* pkt = check_and_cast<cPacket*>(queue.pop());
+        if (!buffer.isEmpty()) {
+            auto* pkt = check_and_cast<cPacket*>(buffer.pop());
             send(pkt, "toApp");
         }
 
         // Si todavía hay paquetes en la cola, programa el próximo envío
-        if (!queue.isEmpty()) {
+        if (!buffer.isEmpty()) {
             simtime_t nextAvailableTime = gate("toApp")->getTransmissionChannel()->getTransmissionFinishTime();
             scheduleAt(nextAvailableTime, endTransmissionEvent);
         }
@@ -81,19 +86,28 @@ void TransportRx::handleDataPacket(DataPkt* pkt) {
             // Canal libre, enviar inmediatamente
             send(pkt, "toApp");
         } else {
-            // Canal ocupado, agregar a la cola
-            queue.insert(pkt);
+            // Canal ocupado, verificar si la cola está llena
+            if (buffer.getLength() >= bufferSize) {
+                EV_WARN << "[TransportRx] Buffer lleno, descartando paquete con seqNum: " << seqNum << "\n";
+                delete pkt; // Dropear el paquete
+                this->bubble("packet dropped");
+                packetDropVector.record(1);
 
-            // Si no hay un evento programado, programa uno
-            if (!endTransmissionEvent->isScheduled()) {
-                simtime_t nextAvailableTime = gate("toApp")->getTransmissionChannel()->getTransmissionFinishTime();
-                scheduleAt(nextAvailableTime, endTransmissionEvent);
+            } else {
+                // Agregar el paquete a la cola
+                buffer.insert(pkt);
+                bufferSizeVector.record(buffer.getLength());
+                // Si no hay un evento programado, programa uno
+                if (!endTransmissionEvent->isScheduled()) {
+                    simtime_t nextAvailableTime = gate("toApp")->getTransmissionChannel()->getTransmissionFinishTime();
+                    scheduleAt(nextAvailableTime, endTransmissionEvent);
+                }
             }
         }
 
         // Envía feedback si el buffer está casi lleno
-        if (queue.getLength() >= bufferSize * 0.8) { // Por ejemplo, si el buffer está 80% lleno
-            double bufferOccupancyRatio = (double)queue.getLength() / bufferSize;
+        if (buffer.getLength() >= bufferSize * 0.8) { // Por ejemplo, si el buffer está 80% lleno
+            double bufferOccupancyRatio = (double)buffer.getLength() / bufferSize;
             sendFeedbackPacket(expectedSeqNum, bufferOccupancyRatio, true); // true indica congestión
         }
     } else if (seqNum > expectedSeqNum) {
@@ -114,6 +128,7 @@ void TransportRx::handleDataPacket(DataPkt* pkt) {
         delete pkt;
     }
 }
+
 
 void TransportRx::sendFeedbackPacket(unsigned int seqNum, double bufferOccupancyRatio, bool isCongestion) {
     auto* feedbackPkt = new FeedbackPkt();
