@@ -92,7 +92,6 @@ void Queue::handleMessage(cMessage *msg) {
             //drop the packet
             delete msg;
             this->bubble("packet dropped");
-
             packetDropVector.record(packetDropVector.getValuesStored() + 1);  // sumo uno a los valores recolectados por el vector.
         }else{
             // enqueue the packet
