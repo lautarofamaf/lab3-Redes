@@ -73,9 +73,9 @@ module NodeRx
     connections:
         in --> queue.in;
         //Case Study 1:
-        //queue.out --> {  datarate = 0.5Mbps;  } --> sink.in;
+        queue.out --> {  datarate = 0.5Mbps;  } --> sink.in;
         //Case Study 2:
-        queue.out --> {  datarate = 1Mbps;  } --> sink.in;
+        // queue.out --> {  datarate = 1Mbps;  } --> sink.in;
 }
 // (Generattor -> Queue) -> Queue -> (Queue -> Sink)
 network Network
@@ -94,7 +94,7 @@ network Network
     connections:
         nodeTx.out --> {  datarate = 1Mbps; delay = 100us;  } --> queue.in;
         //Case Study 1:
-        //queue.out --> {  datarate = 1Mbps; delay = 100us;  } --> nodeRx.in;
+        queue.out --> {  datarate = 1Mbps; delay = 100us;  } --> nodeRx.in;
         //Case Study 2:
-        queue.out --> {  datarate = 0.5Mbps; delay = 100us;  } --> nodeRx.in;
+        //queue.out --> {  datarate = 0.5Mbps; delay = 100us;  } --> nodeRx.in;
 }

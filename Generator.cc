@@ -40,7 +40,7 @@ void Generator::initialize() {
 
 void Generator::finish() {
     // record the amount of packets generated and transmitted
-    recordScalar("Total transmissions per sec", (transmissionStats.getCount()) / 200);
+    recordScalar("Total transmissions", transmissionStats.getCount());
 }
 
 void Generator::handleMessage(cMessage *msg) {
