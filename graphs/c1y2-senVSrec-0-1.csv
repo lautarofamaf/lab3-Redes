@@ -1,0 +1,4 @@
+run,repetition,module,name,value
+General-0-20250512-10:52:52-8923,0,Network.nodeTx.gen,Total transmissions,1979
+General-0-20250512-10:52:52-8923,0,Network.nodeRx.sink,Avg delay,32.879468835695
+General-0-20250512-10:52:52-8923,0,Network.nodeRx.sink,Number of packets received,998
