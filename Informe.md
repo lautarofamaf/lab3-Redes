@@ -95,8 +95,7 @@ Por otro lado, el **problema de congestión** se presenta cuando la capacidad de
 Con nuestro equipo de trabajo fuimos un poco mas a la hora de implementar un algoritmos que solucione ambos problemas en nuestra pequeña simulacion. Pero esto requeria prevenciòn entoces decidimos tener un algorimto secillo de respaldo (este es solo un esquema bastante bueno de resolucion, que iba  a ser terminado y detallado, si solo si, No lograbamos implementar el algoritmo )
 
 
-
-## Algoritmo PLAN-B
+## Implementación Secundaria de los Algoritmos:
 
 Este algorimo consta de agragarle un delay a la cola del nodo transmisor
 
@@ -142,3 +141,171 @@ scheduleAt(simTime() + this->delay, endServiceEvent);
 **Incremento del Delay**: Si el receptor está ocupado (is_bussy = true), se incrementa el delay en 40 unidades.
 **Reducción del Delay**: Si el receptor no está ocupado, el delay se reduce gradualmente hasta un máximo de 40 unidades o se elimina por completo (this->delay = 0).
 Programación del Evento: El transmisor programa el envío del siguiente paquete con el delay ajustado.
+
+
+¡Absolutamente! Entiendo que prefieres el nivel de detalle de la primera versión, incluyendo referencias a la lógica específica del código. Retomaré esa profundidad para la sección del algoritmo principal, asegurándome de que se integre fluidamente con el resto de tu informe.
+
+Aquí tienes la versión más detallada de la sección del algoritmo principal, manteniendo la estructura y el flujo que ya establecimos:
+
+---
+
+## Implementación Principal de los Algoritmos:
+
+Este algoritmo principal se basa en un mecanismo de **control de realimentación explícito**, donde el receptor (`TransportRx`) envía información sobre el estado de la recepción al transmisor (`TransportTx`), permitiendo a este último ajustar su comportamiento de envío.
+
+### Componentes Clave del Algoritmo Principal
+
+#### 1. Módulo Transmisor (`TransportTx`) - Archivo `TransportTx.cc`
+
+El `TransportTx` es el corazón del emisor, responsable de la transmisión de paquetes de datos y de la adaptación de su tasa de envío basada en la realimentación recibida.
+
+*   **Inicialización (`initialize`):**
+    *   Se inicializa un evento `endServiceEvent` para controlar los envíos.
+    *   Se lee el parámetro `bufferSize` del archivo `.ini` 
+    *   `feedbackDelay` y `defaultDelay` se inicializan (ambos a `0.0` inicialmente).
+    *   Se configura `bufferSizeVector` para registrar la ocupación del buffer.
+
+*   **Recepción de Paquetes de la Aplicación (`handleDataPacket`):**
+    *   Cuando un `DataPkt` llega desde el generador local:
+        *   Se verifica si hay espacio en el buffer: `if (buffer.getLength() >= bufferSize)`. Si está lleno, el paquete se descarta (`delete pkt; return;`).
+        *   Si hay espacio, se asigna un número de secuencia único creciente: `pkt->setId(count++);`.
+        *   El paquete se inserta en la cola interna: `buffer.insert(pkt);`.
+        *   Se registra la ocupación del buffer: `bufferSizeVector.record(buffer.getLength());`.
+        *   Si `endServiceEvent` no está programado, se programa inmediatamente para intentar enviar: `scheduleAt(simTime(), endServiceEvent);`.
+
+*   **Mecanismo de Envío y Retransmisión (tipo Go-Back-N) (`handleEndServiceEvent`):**
+    *   Este método se activa cuando `endServiceEvent` se dispara.
+    *   Si el buffer está vacío (`buffer.isEmpty()`), no se hace nada.
+    *   Se busca el siguiente paquete a enviar:
+        ```cpp
+        DataPkt* pktToSend = nullptr;
+        for (int i = 0; i < buffer.getLength(); ++i) {
+            auto* pkt = check_and_cast<DataPkt*>(buffer.get(i));
+            if (pkt->getId() >= expecte
+            dAck) {  // Enviar desde expectedAck en adelante
+                pktToSend = pkt;
+                break;
+            }
+        }
+        ```
+        Esto asegura que solo se envíen paquetes a partir del último ACK implícito o del punto de retransmisión.
+    *   Si se encuentra un `pktToSend`:
+        *   Se duplica el paquete: `auto* dupPkt = pktToSend->dup();`.
+        *   Se envía la copia: `send(dupPkt, "toOut$o");`.
+        *   El paquete original se elimina del buffer y de la memoria: `buffer.remove(pktToSend); delete pktToSend;`.
+        *   Se actualiza el registro de tamaño del buffer.
+    *   El próximo `endServiceEvent` se programa teniendo en cuenta el tiempo de servicio del paquete enviado y el `feedbackDelay` actual:
+        ```cpp
+        auto serviceTime = dupPkt->getDuration();
+        auto endServiceTime = simTime() + serviceTime + feedbackDelay;
+        scheduleAt(endServiceTime, endServiceEvent);
+        ```
+
+*   **Procesamiento de Feedback (`handleFeedbackPacket`):**
+    *   Este método se activa al recibir un `FeedbackPkt`.
+    *   Se extrae la información:
+        ```cpp
+        unsigned int ackNumber = pkt->getLose_Packet(); // Número de ACK o paquete perdido
+        bool isCongestion = pkt->isCongestion();       // Indicador de congestión
+        delete pkt;                                    // Se elimina el paquete de feedback
+        ```
+    *   **Caso de Congestión (`isCongestion == true`):**
+        *   Se incrementa el retardo de envío: `feedbackDelay += 1;` (un aumento de 1.0 segundo).
+        *   Se registra el evento: `EV_INFO << "[TransportTx] Congestión detectada, aumentando retraso a " << feedbackDelay << " segundos.\n";`.
+    *   **Caso de Pérdida de Paquetes (`isCongestion == false`):**
+        *   Se interpreta `ackNumber` como el primer paquete perdido.
+        *   `EV_INFO << "[TransportTx] Pérdida detectada, retransmitiendo desde ackNumber: " << ackNumber << "\n";`
+        *   Si `ackNumber` es mayor o igual al `expectedAck` actual (evita procesar ACKs antiguos):
+            *   Se actualiza el punto de partida para la retransmisión: `expectedAck = ackNumber;`.
+            *   Se sincroniza el contador de secuencia para nuevos paquetes: `count = expectedAck;`.
+            *   Se limpia el buffer de paquetes ya confirmados (aquellos con `Id < expectedAck`):
+                ```cpp
+                while (!buffer.isEmpty() && static_cast<DataPkt*>(buffer.front())->getId() < expectedAck) {
+                    delete buffer.pop();
+                }
+                ```
+        *   Se incrementa el retardo de envío para dar tiempo a la red a recuperarse: `feedbackDelay += 1;` (un aumento de 1.0 segundo).
+    *   Si el `endServiceEvent` no está programado y hay paquetes en el buffer, se programa con el nuevo `feedbackDelay`: `scheduleAt(simTime() + feedbackDelay, endServiceEvent);`.
+
+*   **Recuperación de Tasa / Sondeo de Ancho de Banda (dentro de `handleEndServiceEvent`):**
+    *   Después de un envío exitoso (y antes de programar el siguiente `endServiceEvent`):
+        ```cpp
+        if (feedbackDelay > defaultDelay) { // defaultDelay es 0.0
+            feedbackDelay -= 0.025; // Reduce el retraso en 25 ms
+            if (feedbackDelay < defaultDelay) {
+                feedbackDelay = defaultDelay;
+            }
+        }
+        ```
+        Esto permite una recuperación gradual de la tasa de envío si no se detectan más problemas.
+
+#### 2. Módulo Receptor (`TransportRx`) - Archivo `TransportRx.cc`
+
+El `TransportRx` gestiona la recepción de paquetes, su entrega a la capa de aplicación (`Sink`), y la generación de feedback para el `TransportTx`.
+
+*   **Inicialización (`initialize`):**
+    *   `expectedSeqNum` se inicializa a 0.
+    *   `lastFeedbackSeqNum` se inicializa a `UINT_MAX` (para asegurar que el primer feedback por pérdida se envíe).
+    *   Se crea un `endTransmissionEvent` para gestionar el envío de paquetes al `Sink`.
+    *   Se lee el `bufferSize` del `.ini` 
+    *   Se configuran vectores para estadísticas (`packetDropVector`, `bufferSizeVector`).
+
+*   **Manejo de Paquetes de Datos Entrantes (`handleDataPacket`):**
+    *   Se obtiene el número de secuencia del paquete: `unsigned int seqNum = pkt->getId();`.
+    *   **Paquete Esperado (`seqNum == expectedSeqNum`):**
+        *   `EV_INFO << "[TransportRx] Paquete recibido correctamente: " << seqNum << "\n";`
+        *   Se incrementa el número de secuencia esperado: `expectedSeqNum++;`.
+        *   El paquete se envía al `Sink` (o se encola si el canal `toApp` está ocupado):
+            *   Si el canal está libre (`gate("toApp")->getTransmissionChannel()->getTransmissionFinishTime() <= simTime()`): `send(pkt, "toApp");`.
+            *   Si el canal está ocupado:
+                *   Si el buffer interno de `TransportRx` está lleno (`buffer.getLength() >= bufferSize`): el paquete se descarta (`delete pkt; packetDropVector.record(1);`).
+                *   Si hay espacio: `buffer.insert(pkt);`. Si `endTransmissionEvent` no está programado, se agenda.
+        *   **Detección de Congestión:** Después de procesar un paquete en orden, se verifica la ocupación del buffer:
+            ```cpp
+            if (buffer.getLength() >= bufferSize * 0.8) { // 80% de ocupación
+                double bufferOccupancyRatio = (double)buffer.getLength() / bufferSize;
+                sendFeedbackPacket(expectedSeqNum, bufferOccupancyRatio, true); // true indica congestión
+            }
+            ```
+    *   **Paquete Fuera de Orden (`seqNum > expectedSeqNum`):**
+        *   Indica pérdida de paquetes anteriores.
+        *   `EV_WARN << "[TransportRx] Paquete fuera de orden. Esperado: " << expectedSeqNum << ", recibido: " << seqNum << "\n";`
+        *   Se envía feedback de pérdida, solo si no se ha enviado ya para `expectedSeqNum`:
+            ```cpp
+            if (lastFeedbackSeqNum != expectedSeqNum) {
+                sendFeedbackPacket(expectedSeqNum, -1.0, false); // false indica pérdida
+                lastFeedbackSeqNum = expectedSeqNum;
+            }
+            ```
+        *   El paquete actual se descarta: `delete pkt;`.
+    *   **Paquete Duplicado o Ya Procesado (`seqNum < expectedSeqNum`):**
+        *   `EV_WARN << "[TransportRx] Paquete duplicado o ya procesado, descartando: " << seqNum << "\n";`
+        *   El paquete se descarta: `delete pkt;`.
+
+*   **Envío de Paquetes al `Sink` (`handleMessage` para `endTransmissionEvent`):**
+    *   Si `endTransmissionEvent` se activa y el buffer interno no está vacío, se extrae un paquete y se envía: `auto* pkt = check_and_cast<cPacket*>(buffer.pop()); send(pkt, "toApp");`.
+    *   Si aún quedan paquetes en el buffer, se reprograma `endTransmissionEvent`.
+
+*   **Generación de Paquetes de Feedback (`sendFeedbackPacket`):**
+    *   Crea un `FeedbackPkt`.
+    *   `feedbackPkt->setLose_Packet(seqNum);` (indica el `expectedSeqNum` en el momento de la detección).
+    *   `feedbackPkt->setIsCongestion(isCongestion);` (booleano para diferenciar causa).
+    *   `send(feedbackPkt, "toOut$o");` (envía el feedback hacia `TransportTx`).
+
+### Funcionamiento Integrado del Algoritmo
+
+El sistema opera como un bucle de control cerrado:
+
+1.  `TransportTx` envía datos numerados secuencialmente.
+2.  `TransportRx` recibe datos, verifica la secuencia y monitorea la ocupación de su buffer.
+3.  Si `TransportRx` detecta una pérdida (un `DataPkt` con `seqNum > expectedSeqNum`) o congestión (buffer interno de `TransportRx` >= 80% lleno), envía un `FeedbackPkt` al `TransportTx`. El `FeedbackPkt` para pérdida indica el `expectedSeqNum` que faltaba; para congestión, indica el `expectedSeqNum` actual pero marca `isCongestion = true`.
+4.  `TransportTx` recibe el `FeedbackPkt`:
+    *   Si es por pérdida (`isCongestion = false`), actualiza `expectedAck` al `Lose_Packet` recibido, limpia su buffer de paquetes confirmados, resincroniza `count`, e incrementa su `feedbackDelay` en 1.0 segundo. Esto prepara la retransmisión Go-Back-N y reduce drásticamente la tasa.
+    *   Si es por congestión (`isCongestion = true`), simplemente incrementa su `feedbackDelay` en 1.0 segundo, reduciendo la tasa.
+5.  El `feedbackDelay` aumentado (sumado al `serviceTime` del paquete) ralentiza la programación del siguiente `endServiceEvent` en `TransportTx`, disminuyendo así la tasa de inyección de paquetes.
+6.  Si `TransportTx` envía paquetes exitosamente (es decir, se ejecuta `handleEndServiceEvent` y se envía un paquete), reduce gradualmente su `feedbackDelay` en 0.025 segundos, permitiendo un aumento paulatino de la tasa de envío si la red parece estable.
+
+Este mecanismo busca encontrar un equilibrio dinámico, reduciendo la tasa de envío agresivamente cuando se detectan problemas (incremento aditivo grande del retardo) y aumentándola cautelosamente cuando la red parece estable (decremento aditivo pequeño del retardo). El control de flujo se maneja principalmente por los buffers finitos y el descarte en el receptor, mientras que el control de congestión se aborda explícitamente a través del `feedbackDelay` y la retransmisión.
+
+---
+
