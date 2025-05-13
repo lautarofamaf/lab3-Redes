@@ -127,7 +127,7 @@ void TransportTx::handleEndServiceEvent() {
 
     // Reducir gradualmente el retraso si el sistema se estabiliza
     if (feedbackDelay > defaultDelay) {
-        feedbackDelay -= 0.025; // Reduce el retraso en 5 ms después de cada envío exitoso
+        feedbackDelay -= 0.025; // Reduce el retraso en X ms después de cada envío exitoso
         if (feedbackDelay < defaultDelay) {
             feedbackDelay = defaultDelay; // No permitir que el retraso sea menor al valor base
         }
@@ -147,7 +147,7 @@ void TransportTx::handleFeedbackPacket(FeedbackPkt* pkt) {
 
     if (isCongestion) {
         // Caso de congestión: incrementar el retraso
-        feedbackDelay += 1; // Incrementa el retraso en 50 ms
+        feedbackDelay += 0.8; // Incrementa el retraso en x ms
         EV_INFO << "[TransportTx] Congestión detectada, aumentando retraso a " << feedbackDelay << " segundos.\n";
     } else {
         // Caso de pérdida de paquetes: retransmitir desde el paquete perdido
@@ -165,7 +165,7 @@ void TransportTx::handleFeedbackPacket(FeedbackPkt* pkt) {
         }
 
         // Incrementa el retraso para dar tiempo a la cola de vaciarse
-        feedbackDelay += 1; // Incrementa el retraso en caso de pérdida
+        feedbackDelay += 1.25; // Incrementa el retraso en caso de pérdida
     }
 
     // Si hay más paquetes para enviar, ajusta la programación con el nuevo retraso
