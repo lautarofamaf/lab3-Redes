@@ -52,11 +52,11 @@ Para cada uno de los casos corrimos simulaciones paramétricas con:
 
 Para analizar ambos casos realizamos gráficos en donde se enfrentan la carga ofrecida por el nodo transmisor y la carga recibida por el nodo receptor para cada una de las simulaciones con distintos intervalos de generación de paquetes. Se realizaron dos gráficos en los que se observa que los valores de carga ofrecida y carga recibida para ambos casos (1 y 2) son similares, por lo que decidimos resumirlo en un solo gráfico
 
-![Gráfico carga ofrecida vs carga recibida, se juntan todas las simulaciones en un solo gráfico.](/redes25lab3g07/graphs/C1y2--offChVSRecCh.png)
+![Gráfico carga ofrecida vs carga recibida, se juntan todas las simulaciones en un solo gráfico.](graphs/C1y2--offChVSRecCh.png)kk
 
 En un sistema sin pérdidas ni congestión, la carga recibida debería crecer directamente proporcional a la carga ofrecida. Por lo que vemos en el gráfico, en nuestra simulación esto no ocurre así, dejando en evidencia que a partir de que el nodo transmisor comienza a enviar más de 3 paquetes por segundo hay algun buffer (cola/queue) que comienza a saturarse y a perder paquetes. Realizamos otro gráfico en donde enfrentamos la carga ofrecida con el retardo promedio de los paquetes en llegar al nodo receptor.
 
-![Carga ofrecida vs retardo promedio](/redes25lab3g07/graphs/C1y2-offChVSavDel.png)
+![Carga ofrecida vs retardo promedio](graphs/C1y2-offChVSavDel.png)
 
 Aquí también es claro que, a partir de la generación de 3 paquetes por segundo, los paquetes tardan cada vez más en llegar. Esto refleja, nuevamente, la saturación de algún buffer, haciendo que el/los último/s paquete/s almacenado/s en dicho buffer deban esperar a que este envíe todos los paquetes que hay delante de el/ellos para poder ser enviado/s.
 
@@ -64,11 +64,11 @@ Dados estos gráficos, decidimos, para cada uno de los casos, graficar el tamañ
 
 ### Caso 1
 
-![Tamaño de buffer al momento](/redes25lab3g07/graphs/C1-bufferSize.png)
+![Tamaño de buffer al momento](graphs/C1-bufferSize.png)
 
 Vemos que el buffer del nodo receptor, luego de aproximadamente 40 segundos, se satura alcanzando su límite de 200 paquetes y se mantiene saturado hasta el final de la simulación. Queda claro que el *cuello de botella* en este caso se encuentra en la cola de el nodo receptor. Vemos un gráfico de los paquetes perdidos a lo largo de toda la simulación en este buffer
 
-![Paquetes droppeados por la cola del nodo receptor](/redes25lab3g07/graphs/C1-droppedPacks.png)
+![Paquetes droppeados por la cola del nodo receptor](graphs/C1-droppedPacks.png)
 
 A medida que pasa el tiempo, luego de los 40 segundos, el buffer del nodo receptor continúa perdiendo paquetes de forma casi lineal, es decir, podría asumirse que todos los paquetes que llegan a dicha cola son descartados por falta de espacio.
 
@@ -76,11 +76,11 @@ Dados estos gráficos asumimos que el problema para este caso está en el buffer
 
 ### Caso 2
 
-![Tamaño de buffer al momento](/redes25lab3g07/graphs/C2-bufferSize.png)
+![Tamaño de buffer al momento](graphs/C2-bufferSize.png)
 
 Lo que sucede en este caso es muy similar a lo ocurrido en el caso 1, pero el problema se observa en la **cola intermedia**, es decir, **la red**. Luego de los 40 segundos el buffer de la red se satura y parece mantenerse saturado hasta el final de la simulación, sugiriendo que cada paquete que llegue a él a partir de ese momento será descartado. Graficamos dicha pérdida para corroborar nuestra suposición
 
-![Paquetes droppeados por la cola del nodo receptor](/redes25lab3g07/graphs/C2-droppedPacks.png)
+![Paquetes droppeados por la cola del nodo receptor](graphs/C2-droppedPacks.png)
 
 El gráfico es prácticamente igual que el gráfico de paquetes perdidos para el caso 1, pero aquí, como el problema viene de la red, se alude un problema de **control de congestión**
 
